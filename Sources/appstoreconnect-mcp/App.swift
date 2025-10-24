@@ -3,6 +3,19 @@ import Foundation
 import Logging
 import MCP
 
+enum LogLevel: String, ExpressibleByArgument {
+    case debug, info, warn, error
+
+    var loggerLevel: Logger.Level {
+        switch self {
+        case .debug: return .debug
+        case .info: return .info
+        case .warn: return .warning
+        case .error: return .error
+        }
+    }
+}
+
 @main
 struct AppStoreConnectCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -10,15 +23,15 @@ struct AppStoreConnectCommand: AsyncParsableCommand {
         abstract: "MCP server for App Store Connect API integration",
         version: "1.0.0"
     )
-    
-    @Option(name: .long, help: "Log level (debug, info, warn, error)")
-    var logLevel: String = "info"
+
+    @Option(name: .long, help: "Log level: 'debug', 'info', 'warn', or 'error'")
+    var logLevel: LogLevel = .info
     
     func run() async throws {
         // Setup logging to stderr
         LoggingSystem.bootstrap { label in
             var handler = StreamLogHandler.standardError(label: label)
-            handler.logLevel = Logger.Level(rawValue: logLevel) ?? .info
+            handler.logLevel = logLevel.loggerLevel
             return handler
         }
         
@@ -37,18 +50,17 @@ struct AppStoreConnectCommand: AsyncParsableCommand {
         
         logger.info("Starting App Store Connect MCP server",
                    metadata: [
-                       "keyID": "\(keyID)",
-                       "issuerID": "\(issuerID)",
+                       "keyIDPrefix": "\(String(keyID.prefix(4)))***",
                        "keyExpiry": "\(keyExpiry)"
                    ])
-        
-        let server = MCPServer(
+
+        let server = try await MCPServer(
             keyID: keyID,
             issuerID: issuerID,
             privateKeyPath: privateKeyPath,
             keyExpiry: keyExpiry
         )
-        
+
         try await server.run()
     }
 }

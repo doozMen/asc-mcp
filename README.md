@@ -21,22 +21,38 @@ MCP server for App Store Connect API integration. Provides tools to query apps, 
 
 ## Installation
 
-### 1. Build and Install
+### Quick Install
+
+Use the provided installation script:
+
+```bash
+./install.sh
+```
+
+This script will:
+- Build the project in release mode
+- Remove any existing installation
+- Install to `~/.swiftpm/bin`
+- Verify the installation
+
+### Manual Installation
+
+If you prefer manual installation:
 
 ```bash
 # Build in release mode
-swift build -c release
+xcrun swift build -c release
 
-# Install to ~/.swiftpm/bin
-swift package experimental-install
-```
+# Install to ~/.swiftpm/bin (experimental-install doesn't support overwriting)
+rm -f ~/.swiftpm/bin/appstoreconnect-mcp
+xcrun swift package experimental-install --product appstoreconnect-mcp
 
-Verify installation:
-```bash
+# Verify installation
 which appstoreconnect-mcp
+appstoreconnect-mcp --version
 ```
 
-### 2. Get App Store Connect API Credentials
+### Get App Store Connect API Credentials
 
 1. Sign in to [App Store Connect](https://appstoreconnect.apple.com)
 2. Go to Users and Access > Keys
@@ -156,11 +172,13 @@ List builds for a specific app.
 
 ### Tool: download_dsyms
 
-Download dSYM files for a specific build (used for crash symbolication).
+Get dSYM download information for a specific build (used for crash symbolication).
+
+**IMPORTANT**: The App Store Connect API does not provide a direct endpoint to download dSYM files. This tool verifies the build exists and creates an information file with alternative download methods.
 
 **Parameters**:
 - `build_id` (required): Build ID from App Store Connect
-- `output_path` (required): Local directory path where dSYMs should be saved
+- `output_path` (required): Local directory path where the information file should be saved
 
 **Example**:
 ```json
@@ -171,6 +189,32 @@ Download dSYM files for a specific build (used for crash symbolication).
     "output_path": "/Users/developer/dsyms"
   }
 }
+```
+
+**Output**:
+Creates a text file with:
+- Build information (version, upload date, processing state)
+- Alternative download methods:
+  1. Xcode Organizer (manual download)
+  2. App Store Connect web portal
+  3. Fastlane automation (recommended for CI/CD)
+  4. Xcode archive export
+- Ready-to-use Fastlane commands with your app's bundle ID
+
+**For Automated dSYM Downloads**:
+Use Fastlane's `download_dsyms` action:
+```bash
+fastlane run download_dsyms app_identifier:com.example.app version:1.0.0
+```
+
+Or add to your Fastfile:
+```ruby
+lane :download_symbols do
+  download_dsyms(
+    app_identifier: "com.example.app",
+    version: "1.0.0"
+  )
+end
 ```
 
 ### Tool: get_latest_build
@@ -195,13 +239,17 @@ Get the most recent build for a specific app.
 ### Build
 
 ```bash
-swift build
+# Debug build
+xcrun swift build
+
+# Release build
+xcrun swift build -c release
 ```
 
 ### Test
 
 ```bash
-swift test
+xcrun swift test
 ```
 
 ### Run Locally
@@ -213,7 +261,10 @@ export ASC_ISSUER_ID="YOUR_ISSUER_ID"
 export ASC_PRIVATE_KEY_PATH="/path/to/AuthKey_XXXXXXXXXX.p8"
 
 # Run with debug logging
-swift run appstoreconnect-mcp --log-level debug
+xcrun swift run appstoreconnect-mcp --log-level debug
+
+# Available log levels: debug, info, warn, error
+xcrun swift run appstoreconnect-mcp --log-level info
 ```
 
 ### Format Code

@@ -150,27 +150,133 @@ actor AppStoreConnectClientWrapper {
     }
     
     /// Download dSYMs for a build
+    ///
+    /// Note: The App Store Connect API does not provide a direct endpoint to download dSYM files.
+    /// This method verifies the build exists and provides information about alternative methods.
+    ///
+    /// Alternative methods to download dSYMs:
+    /// 1. Use Xcode Organizer (Window > Organizer > Archives)
+    /// 2. Download from App Store Connect web portal (TestFlight > Build > Download dSYM)
+    /// 3. Use Fastlane: `fastlane run download_dsyms`
+    /// 4. Use Xcode command line: `xcodebuild -exportArchive -archivePath <path> -exportPath <path>`
+    ///
+    /// - Parameters:
+    ///   - buildID: The App Store Connect build ID
+    ///   - outputPath: Directory where dSYM information should be saved
+    /// - Returns: URL to the information file about dSYM download methods
+    /// - Throws: ASCError if the build is not found or API errors occur
     func downloadDSYMs(buildID: String, outputPath: String) async throws -> URL {
+        logger.debug("Attempting dSYM download", metadata: ["buildID": "\(buildID)", "outputPath": "\(outputPath)"])
+
         do {
-            // Get build to verify it exists
-            _ = try await getBuild(id: buildID)
+            // Get build to verify it exists and collect metadata
+            let build = try await getBuild(id: buildID)
+
+            // Verify the build has been processed
+            guard let processingState = build.attributes?.processingState else {
+                throw ASCError.downloadFailed("Build processing state is unknown for build \(buildID)")
+            }
+
+            guard processingState == .valid else {
+                throw ASCError.downloadFailed("Build must be in VALID state to have dSYMs. Current state: \(processingState.rawValue)")
+            }
 
             // Create output directory
             let outputURL = URL(filePath: outputPath)
             try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
 
-            // The actual dSYM download requires the build to have processed dSYMs
-            // and uses the build's dSYM URL endpoint
-            let dSymPath = outputURL.appendingPathComponent("dsyms-\(buildID).zip")
+            // Create an information file with alternative methods
+            let infoPath = outputURL.appendingPathComponent("dsym-download-info-\(buildID).txt")
 
-            logger.info("dSYMs download prepared", metadata: ["buildID": "\(buildID)", "outputPath": "\(dSymPath.path)"])
+            var infoContent = """
+            dSYM Download Information
+            =========================
 
-            // Note: Full implementation would use Resources.v1.builds.id(buildID).betaBuildLocalizations
-            // or similar to get the actual dSYM download URL
-            // This is a placeholder showing where the file would be saved
-            return dSymPath
+            Build ID: \(buildID)
+            Version: \(build.attributes?.version ?? "unknown")
+            Uploaded: \(build.attributes?.uploadedDate?.description ?? "unknown")
+            Processing State: \(processingState.rawValue)
+
+            IMPORTANT: App Store Connect API Limitation
+            -------------------------------------------
+            The App Store Connect API does not provide a direct endpoint to download dSYM files.
+            This is a known limitation of the API.
+
+            Alternative Methods to Download dSYMs:
+            --------------------------------------
+
+            1. Xcode Organizer (Recommended for manual downloads):
+               - Open Xcode
+               - Window > Organizer
+               - Select Archives
+               - Find your build and click "Download Debug Symbols"
+
+            2. App Store Connect Web Portal:
+               - Visit https://appstoreconnect.apple.com
+               - Go to TestFlight > Your App > Build \(build.attributes?.version ?? "")
+               - Click "Download dSYM"
+
+            3. Fastlane (Recommended for automation):
+               Install Fastlane and run:
+               fastlane run download_dsyms app_identifier:YOUR_BUNDLE_ID version:\(build.attributes?.version ?? "")
+
+               Or add to your Fastfile:
+               lane :download_symbols do
+                 download_dsyms(
+                   app_identifier: "YOUR_BUNDLE_ID",
+                   version: "\(build.attributes?.version ?? "")"
+                 )
+               end
+
+            4. Manual Archive Export:
+               If you have the original Xcode archive:
+               xcodebuild -exportArchive \\
+                 -archivePath /path/to/YourApp.xcarchive \\
+                 -exportPath /path/to/output \\
+                 -exportOptionsPlist /path/to/ExportOptions.plist
+
+            For Crash Symbolication:
+            ------------------------
+            Once you have the dSYM files, use them with:
+            - Xcode Organizer for crash reports
+            - Firebase Crashlytics upload: firebase crashlytics:symbols:upload --app=APP_ID path/to/dSYMs
+            - Symbolicate manually: atos -arch arm64 -o YourApp.app.dSYM/Contents/Resources/DWARF/YourApp -l LOAD_ADDRESS STACK_ADDRESS
+
+            """
+
+            // Add app information if available
+            if let appID = build.relationships?.app?.data?.id {
+                do {
+                    let app = try await getApp(id: appID)
+                    if let bundleID = app.attributes?.bundleID {
+                        infoContent += "\nApp Bundle ID: \(bundleID)\n"
+                        infoContent += """
+
+                        Fastlane Command for this app:
+                        fastlane run download_dsyms app_identifier:\(bundleID) version:\(build.attributes?.version ?? "")
+
+                        """
+                    }
+                } catch {
+                    logger.warning("Could not fetch app information", metadata: ["appID": "\(appID)", "error": "\(error)"])
+                }
+            }
+
+            // Write information file
+            try infoContent.write(to: infoPath, atomically: true, encoding: .utf8)
+
+            logger.info("dSYM download information created", metadata: [
+                "buildID": "\(buildID)",
+                "version": "\(build.attributes?.version ?? "unknown")",
+                "infoPath": "\(infoPath.path)"
+            ])
+
+            return infoPath
+        } catch let error as ASCError {
+            logger.error("Failed to prepare dSYM download", metadata: ["buildID": "\(buildID)", "error": "\(error.localizedDescription)"])
+            throw error
         } catch {
-            logger.error("Failed to download dSYMs", metadata: ["buildID": "\(buildID)", "error": "\(error)"])
+            logger.error("Failed to prepare dSYM download", metadata: ["buildID": "\(buildID)", "error": "\(error)"])
             throw mapAPIError(error)
         }
     }

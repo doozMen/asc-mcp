@@ -157,13 +157,29 @@ All file paths mentioned in this document use absolute paths:
 - Config: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Logs: `~/Library/Logs/Claude/mcp-server-appstoreconnect-mcp.log`
 
+## dSYM Download Implementation
+
+**API Limitation**: The App Store Connect API does not provide a direct endpoint to download dSYM files. This is a known limitation documented by Apple.
+
+**Current Implementation**:
+- Verifies build exists and has valid processing state
+- Creates an information file with alternative download methods
+- Provides ready-to-use Fastlane commands with the app's bundle ID
+- Includes comprehensive instructions for manual and automated downloads
+
+**Alternative Methods Provided**:
+1. Xcode Organizer (manual download)
+2. App Store Connect web portal
+3. Fastlane automation (recommended for CI/CD)
+4. Xcode archive export
+
 ## Next Steps
 
 1. Test with real App Store Connect credentials
-2. Implement actual dSYM download functionality (currently placeholder)
-3. Add more tools as needed (version management, review submissions, etc.)
-4. Add comprehensive integration tests
-5. Consider adding pagination support for large result sets
+2. Add more tools as needed (version management, review submissions, etc.)
+3. Add comprehensive integration tests
+4. Consider adding pagination support for large result sets
+5. Add caching for frequently accessed data
 
 ## License
 

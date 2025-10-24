@@ -25,27 +25,8 @@ enum GetLatestBuildHandler {
         lines.append("Latest Build")
         lines.append("============")
         lines.append("")
-        
-        let version = build.attributes?.version ?? "Unknown"
-        let processingState = build.attributes?.processingState?.rawValue ?? "Unknown"
 
-        lines.append("Version: \(version)")
-        lines.append("ID: \(build.id)")
-        lines.append("Processing State: \(processingState)")
-
-        if let uploadedDate = build.attributes?.uploadedDate {
-            let formatter = ISO8601DateFormatter()
-            lines.append("Uploaded: \(formatter.string(from: uploadedDate))")
-        }
-
-        if let expirationDate = build.attributes?.expirationDate {
-            let formatter = ISO8601DateFormatter()
-            lines.append("Expires: \(formatter.string(from: expirationDate))")
-        }
-
-        if let isExpired = build.attributes?.isExpired {
-            lines.append("Expired: \(isExpired ? "Yes" : "No")")
-        }
+        lines.append(contentsOf: FormatHelpers.formatBuildInfo(build))
 
         if let minOsVersion = build.attributes?.minOsVersion {
             lines.append("Min OS Version: \(minOsVersion)")

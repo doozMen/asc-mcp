@@ -33,24 +33,12 @@ enum ListBuildsHandler {
         
         for build in builds {
             let version = build.attributes?.version ?? "Unknown"
-            let processingState = build.attributes?.processingState?.rawValue ?? "Unknown"
-
             lines.append("Build: \(version)")
-            lines.append("  ID: \(build.id)")
-            lines.append("  Processing State: \(processingState)")
 
-            if let uploadedDate = build.attributes?.uploadedDate {
-                let formatter = ISO8601DateFormatter()
-                lines.append("  Uploaded: \(formatter.string(from: uploadedDate))")
-            }
-
-            if let expirationDate = build.attributes?.expirationDate {
-                let formatter = ISO8601DateFormatter()
-                lines.append("  Expires: \(formatter.string(from: expirationDate))")
-            }
-
-            if let isExpired = build.attributes?.isExpired {
-                lines.append("  Expired: \(isExpired ? "Yes" : "No")")
+            let buildInfo = FormatHelpers.formatBuildInfo(build)
+            // Skip first line (Version) since we already show it as "Build: X"
+            for info in buildInfo.dropFirst() {
+                lines.append("  \(info)")
             }
 
             lines.append("")

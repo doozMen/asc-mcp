@@ -8,21 +8,16 @@ actor MCPServer {
     private let logger: Logger
     private let ascClient: AppStoreConnectClientWrapper
     
-    init(keyID: String, issuerID: String, privateKeyPath: String, keyExpiry: Int) {
+    init(keyID: String, issuerID: String, privateKeyPath: String, keyExpiry: Int) async throws {
         self.logger = Logger(label: "mcp-server")
-        
-        do {
-            self.ascClient = try AppStoreConnectClientWrapper(
-                keyID: keyID,
-                issuerID: issuerID,
-                privateKeyPath: privateKeyPath,
-                keyExpiry: keyExpiry
-            )
-        } catch {
-            logger.critical("Failed to initialize App Store Connect client", metadata: ["error": "\(error)"])
-            fatalError("Failed to initialize App Store Connect client: \(error)")
-        }
-        
+
+        self.ascClient = try AppStoreConnectClientWrapper(
+            keyID: keyID,
+            issuerID: issuerID,
+            privateKeyPath: privateKeyPath,
+            keyExpiry: keyExpiry
+        )
+
         self.server = Server(
             name: "appstoreconnect-mcp",
             version: "1.0.0",

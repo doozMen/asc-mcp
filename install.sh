@@ -5,7 +5,7 @@ echo "Installing App Store Connect MCP server..."
 
 # Build in release mode
 echo "Building in release mode..."
-swift build -c release
+xcrun swift build -c release
 
 # Remove existing installation if present
 if command -v appstoreconnect-mcp &> /dev/null; then
@@ -15,7 +15,12 @@ fi
 
 # Install to ~/.swiftpm/bin
 echo "Installing to ~/.swiftpm/bin..."
-swift package experimental-install
+xcrun swift package experimental-install --product appstoreconnect-mcp
+
+# Test version command
+echo ""
+echo "Installed version:"
+appstoreconnect-mcp --version
 
 # Verify installation
 if command -v appstoreconnect-mcp &> /dev/null; then

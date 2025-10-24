@@ -19,25 +19,39 @@ enum DownloadDSYMsHandler {
             throw MCPError.invalidParams("Missing required parameter: output_path")
         }
         
-        logger.debug("Downloading dSYMs", metadata: [
+        logger.debug("Preparing dSYM download information", metadata: [
             "buildID": "\(buildID)",
             "outputPath": "\(outputPath)"
         ])
-        
-        // Download dSYMs
-        let dSymURL = try await client.downloadDSYMs(buildID: buildID, outputPath: outputPath)
-        
-        // Format response
+
+        // Get dSYM download information
+        let infoFileURL = try await client.downloadDSYMs(buildID: buildID, outputPath: outputPath)
+
+        // Read the information file content
+        let infoContent = try String(contentsOf: infoFileURL, encoding: .utf8)
+
+        // Format response with clear indication of API limitation
         var lines: [String] = []
-        lines.append("dSYM Download")
-        lines.append("=============")
+        lines.append("dSYM Download Information")
+        lines.append("=========================")
         lines.append("")
-        lines.append("Build ID: \(buildID)")
-        lines.append("Output Path: \(dSymURL.path)")
+        lines.append("IMPORTANT: The App Store Connect API does not provide direct dSYM downloads.")
+        lines.append("A detailed information file has been created with alternative methods.")
         lines.append("")
-        lines.append("Note: dSYM download prepared. The actual download from App Store Connect")
-        lines.append("may require additional API calls depending on the build's dSYM availability.")
-        
+        lines.append("Information File: \(infoFileURL.path)")
+        lines.append("")
+        lines.append("--- File Content ---")
+        lines.append(infoContent)
+        lines.append("")
+        lines.append("--- Summary ---")
+        lines.append("Alternative methods available:")
+        lines.append("  1. Xcode Organizer (manual download)")
+        lines.append("  2. App Store Connect web portal")
+        lines.append("  3. Fastlane automation (recommended for CI/CD)")
+        lines.append("  4. Xcode archive export")
+        lines.append("")
+        lines.append("For automation, consider using Fastlane's download_dsyms action.")
+
         return CallTool.Result(
             content: [
                 .text(lines.joined(separator: "\n"))
