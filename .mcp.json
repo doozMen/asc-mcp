@@ -1,11 +1,3 @@
 {
-  "mcpServers": {
-    "appstoreconnect": {
-      "command": "appstoreconnect-mcp",
-      "args": ["--log-level", "info"],
-      "env": {
-        "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin"
-      }
-    }
-  }
+  "mcpServers": {}
 }
