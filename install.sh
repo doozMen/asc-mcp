@@ -49,31 +49,46 @@ if command -v appstoreconnect-mcp &> /dev/null; then
             fi
 
             echo ""
-            echo "Enter your 1Password secret references:"
-            echo "Format: op://vault-name/item-name/field-name"
-            echo "Example: op://Private/App Store Connect/ASC Key ID"
+            echo "Enter your 1Password item name containing App Store Connect credentials:"
+            echo "The item should have these fields:"
+            echo "  - ASC Key ID"
+            echo "  - ASC Issuer ID"
+            echo "  - ASC Private Key Path"
+            echo ""
+            echo "Example: 'Dooz Apple developer' or 'App Store Connect API'"
             echo ""
 
-            echo -n "ASC_KEY_ID reference: "
-            read -r OP_KEY_ID_REF
-            echo -n "ASC_ISSUER_ID reference: "
-            read -r OP_ISSUER_ID_REF
-            echo -n "ASC_PRIVATE_KEY_PATH reference: "
-            read -r OP_KEY_PATH_REF
+            echo -n "1Password item name: "
+            read -r OP_ITEM_NAME
 
-            # Retrieve values from 1Password
+            # Retrieve all credentials from the single item
             echo ""
-            echo "Retrieving credentials from 1Password..."
-            ASC_KEY_ID=$(op read "$OP_KEY_ID_REF")
-            ASC_ISSUER_ID=$(op read "$OP_ISSUER_ID_REF")
-            ASC_PRIVATE_KEY_PATH=$(op read "$OP_KEY_PATH_REF")
+            echo "Retrieving credentials from 1Password item '$OP_ITEM_NAME'..."
 
-            if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_PRIVATE_KEY_PATH" ]; then
-                echo "Error: Failed to retrieve credentials from 1Password"
+            ASC_KEY_ID=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Key ID" 2>/dev/null)
+            ASC_ISSUER_ID=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Issuer ID" 2>/dev/null)
+            ASC_PRIVATE_KEY_PATH=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Private Key Path" 2>/dev/null)
+
+            # Validate all fields were retrieved
+            if [ -z "$ASC_KEY_ID" ]; then
+                echo "Error: Field 'ASC Key ID' not found in 1Password item '$OP_ITEM_NAME'"
+                echo "Make sure the item has a field labeled exactly 'ASC Key ID'"
                 exit 1
             fi
 
-            echo "✓ Credentials retrieved successfully from 1Password"
+            if [ -z "$ASC_ISSUER_ID" ]; then
+                echo "Error: Field 'ASC Issuer ID' not found in 1Password item '$OP_ITEM_NAME'"
+                echo "Make sure the item has a field labeled exactly 'ASC Issuer ID'"
+                exit 1
+            fi
+
+            if [ -z "$ASC_PRIVATE_KEY_PATH" ]; then
+                echo "Error: Field 'ASC Private Key Path' not found in 1Password item '$OP_ITEM_NAME'"
+                echo "Make sure the item has a field labeled exactly 'ASC Private Key Path'"
+                exit 1
+            fi
+
+            echo "✓ Retrieved 3 credentials from 1Password item '$OP_ITEM_NAME'"
 
         else
             # Manual credential entry
