@@ -130,6 +130,53 @@ actor MCPServer {
                     ]),
                     "required": .array(["app_id"])
                 ])
+            ),
+            Tool(
+                name: "upload_dsyms_to_firebase",
+                description: "Upload dSYM files to Firebase Crashlytics. Can download from App Store Connect or use local files. Uses Firebase CLI (no CocoaPods dependency).",
+                inputSchema: .object([
+                    "type": "object",
+                    "properties": .object([
+                        "firebase_app_id": .object([
+                            "type": "string",
+                            "description": "Firebase app ID (e.g., '1:123456789:ios:abc123def456')"
+                        ]),
+                        "build_id": .object([
+                            "type": "string",
+                            "description": "App Store Connect build ID (downloads dSYMs first)"
+                        ]),
+                        "archive_path": .object([
+                            "type": "string",
+                            "description": "Path to .xcarchive directory (uses archive/dSYMs)"
+                        ]),
+                        "dsyms_path": .object([
+                            "type": "string",
+                            "description": "Direct path to dSYMs directory"
+                        ])
+                    ]),
+                    "required": .array(["firebase_app_id"])
+                ])
+            ),
+            Tool(
+                name: "find_xcode_archives",
+                description: "Find Xcode archives in ~/Library/Developer/Xcode/Archives. Filter by app name or bundle ID, or get latest only.",
+                inputSchema: .object([
+                    "type": "object",
+                    "properties": .object([
+                        "app_name_filter": .object([
+                            "type": "string",
+                            "description": "Filter by app name (case-insensitive, partial match)"
+                        ]),
+                        "bundle_id_filter": .object([
+                            "type": "string",
+                            "description": "Filter by bundle ID (case-insensitive, partial match)"
+                        ]),
+                        "latest_only": .object([
+                            "type": "boolean",
+                            "description": "Return only the latest archive (default: false)"
+                        ])
+                    ])
+                ])
             )
         ]
     }
@@ -168,6 +215,20 @@ actor MCPServer {
 
         case "get_latest_build":
             return try await GetLatestBuildHandler.handle(
+                arguments: params.arguments ?? [:],
+                client: ascClient,
+                logger: logger
+            )
+
+        case "upload_dsyms_to_firebase":
+            return try await UploadDSYMsToFirebaseHandler.handle(
+                arguments: params.arguments ?? [:],
+                client: ascClient,
+                logger: logger
+            )
+
+        case "find_xcode_archives":
+            return try await FindXcodeArchivesHandler.handle(
                 arguments: params.arguments ?? [:],
                 client: ascClient,
                 logger: logger

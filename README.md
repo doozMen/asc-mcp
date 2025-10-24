@@ -4,12 +4,21 @@ MCP server for App Store Connect API integration. Provides tools to query apps, 
 
 ## Features
 
+### App Store Connect Tools
 - **list_apps**: List all apps with optional bundle ID filtering
 - **get_app_status**: Get detailed app information and status
 - **list_builds**: List builds for an app with optional version filtering
 - **download_dsyms**: Download dSYM files for crash symbolication
 - **get_latest_build**: Get the most recent build for an app
+
+### Firebase Crashlytics Tools
+- **upload_dsyms_to_firebase**: Upload dSYMs to Firebase Crashlytics (supports ASC download, local archive, or direct path)
+- **find_xcode_archives**: Search local Xcode archives by app name or bundle ID
+
+### Technical Features
+- Pure Swift implementation (no Ruby, no Fastlane, no CocoaPods)
 - JWT authentication with App Store Connect API
+- Firebase CLI integration for crash symbol uploads
 - Comprehensive error handling for API errors (401, 403, 404, 429)
 - Actor-based architecture for thread safety
 
@@ -219,6 +228,77 @@ Get the most recent build for a specific app.
   }
 }
 ```
+
+### Tool: upload_dsyms_to_firebase
+
+Upload dSYM files to Firebase Crashlytics for crash symbolication. Supports three source options: download from App Store Connect, use local Xcode archive, or use direct dSYM path.
+
+**Implementation**: Uses Firebase CLI (`firebase crashlytics:symbols:upload`) - no CocoaPods dependency.
+
+**Parameters**:
+- `firebase_app_id` (required): Firebase app ID (e.g., "1:123456789:ios:abc123def456")
+- Exactly one of the following:
+  - `build_id`: App Store Connect build ID (downloads dSYMs first)
+  - `archive_path`: Path to .xcarchive directory (uses archive/dSYMs)
+  - `dsyms_path`: Direct path to dSYMs directory
+
+**Example - Upload from App Store Connect:**
+```json
+{
+  "name": "upload_dsyms_to_firebase",
+  "arguments": {
+    "firebase_app_id": "1:123456789:ios:abc123def456",
+    "build_id": "abc123-def456"
+  }
+}
+```
+
+**Example - Upload from local archive:**
+```json
+{
+  "name": "upload_dsyms_to_firebase",
+  "arguments": {
+    "firebase_app_id": "1:123456789:ios:abc123def456",
+    "archive_path": "/Users/developer/Library/Developer/Xcode/Archives/2025-10-24/MyApp.xcarchive"
+  }
+}
+```
+
+**Prerequisites**:
+- Firebase CLI installed (`npm install -g firebase-tools`)
+- GoogleService-Info.plist in project
+- Firebase project configured
+
+### Tool: find_xcode_archives
+
+Search for Xcode archives in `~/Library/Developer/Xcode/Archives`. Filter by app name or bundle ID, or get the latest archive.
+
+**Parameters**:
+- `app_name_filter` (optional): Filter by app name (case-insensitive, partial match)
+- `bundle_id_filter` (optional): Filter by bundle ID (case-insensitive, partial match)
+- `latest_only` (optional): Return only latest archive (default: false)
+
+**Example - Find latest archive:**
+```json
+{
+  "name": "find_xcode_archives",
+  "arguments": {
+    "latest_only": true
+  }
+}
+```
+
+**Example - Find by app name:**
+```json
+{
+  "name": "find_xcode_archives",
+  "arguments": {
+    "app_name_filter": "MyApp"
+  }
+}
+```
+
+**Output**: Lists archives with name, bundle ID, version, build number, creation date, path, and dSYM availability.
 
 ## Development
 
