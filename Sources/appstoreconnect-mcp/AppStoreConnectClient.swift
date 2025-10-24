@@ -5,9 +5,9 @@ import Logging
 import Subprocess
 
 #if canImport(System)
-@preconcurrency import System
+  @preconcurrency import System
 #else
-@preconcurrency import SystemPackage
+  @preconcurrency import SystemPackage
 #endif
 
 /// Errors specific to App Store Connect operations

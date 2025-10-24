@@ -1,5 +1,10 @@
 # App Store Connect MCP Server
 
+[![Version](https://img.shields.io/github/v/release/doozMen/asc-mcp)](https://github.com/doozMen/asc-mcp/releases)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/doozMen/asc-mcp)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 MCP server for App Store Connect API integration. Provides tools to query apps, builds, and download dSYM files through the Model Context Protocol.
 
 ## 🚀 New: Claude Code Plugin Available!
@@ -31,9 +36,12 @@ cd ~/.claude/plugins/appstoreconnect-mcp
 - **download_dsyms**: Download dSYM files for crash symbolication
 - **get_latest_build**: Get the most recent build for an app
 
-### Firebase Crashlytics Tools
+### Firebase Tools
 - **upload_dsyms_to_firebase**: Upload dSYMs to Firebase Crashlytics (supports ASC download, local archive, or direct path)
 - **find_xcode_archives**: Search local Xcode archives by app name or bundle ID
+- **list_firebase_projects**: List all accessible Firebase projects with details
+- **get_firebase_project**: Get detailed information about a specific Firebase project
+- **list_firebase_apps**: List all apps (iOS, Android, Web) in a Firebase project
 
 ### Technical Features
 - Pure Swift implementation (no Ruby, no Fastlane, no CocoaPods)
@@ -319,6 +327,84 @@ Search for Xcode archives in `~/Library/Developer/Xcode/Archives`. Filter by app
 ```
 
 **Output**: Lists archives with name, bundle ID, version, build number, creation date, path, and dSYM availability.
+
+### Tool: list_firebase_projects
+
+List all Firebase projects you have access to.
+
+**Prerequisites**:
+- Firebase CLI installed (`npm install -g firebase-tools` or `brew install firebase-cli`)
+- Logged into Firebase (`firebase login`)
+
+**Parameters**: None
+
+**Example**:
+```json
+{
+  "name": "list_firebase_projects",
+  "arguments": {}
+}
+```
+
+**Output**: Table showing project display name, project ID, project number, and resource location for all accessible projects.
+
+### Tool: get_firebase_project
+
+Get detailed information about a specific Firebase project.
+
+**Prerequisites**:
+- Firebase CLI installed and logged in
+
+**Parameters**:
+- `project_id` (required): Firebase project ID (e.g., "myapp-ios-123abc")
+
+**Example**:
+```json
+{
+  "name": "get_firebase_project",
+  "arguments": {
+    "project_id": "myapp-ios-123abc"
+  }
+}
+```
+
+**Output**: Detailed project information including display name, project number, resources (hosting site, storage bucket, database instance, location).
+
+### Tool: list_firebase_apps
+
+List all apps (iOS, Android, Web) in a Firebase project. Optionally filter by platform.
+
+**Prerequisites**:
+- Firebase CLI installed and logged in
+
+**Parameters**:
+- `project_id` (required): Firebase project ID
+- `platform` (optional): Filter by platform ("ios", "android", or "web")
+
+**Example - List all apps:**
+```json
+{
+  "name": "list_firebase_apps",
+  "arguments": {
+    "project_id": "myapp-ios-123abc"
+  }
+}
+```
+
+**Example - List iOS apps only:**
+```json
+{
+  "name": "list_firebase_apps",
+  "arguments": {
+    "project_id": "myapp-ios-123abc",
+    "platform": "ios"
+  }
+}
+```
+
+**Output**: Lists all apps grouped by platform (iOS, Android, Web) with app ID, display name, bundle ID/package name, and namespace.
+
+**Use Case**: Get Firebase app IDs for use with `upload_dsyms_to_firebase` tool.
 
 ## Development
 
