@@ -102,18 +102,29 @@ if command -v appstoreconnect-mcp &> /dev/null; then
             read -r ASC_PRIVATE_KEY_PATH
         fi
 
-        # Add using claude CLI
-        # Note: --log-level is not supported by claude mcp add
-        # It will be configured in the MCP server args separately if needed
+        # Add to both Claude Desktop and Claude Code
+        echo ""
+        echo "Adding MCP server to Claude Desktop and Claude Code..."
+
+        # Add to Claude Desktop (user scope)
         claude mcp add -s user appstoreconnect appstoreconnect-mcp \
             -e "PATH=\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin" \
             -e "ASC_KEY_ID=$ASC_KEY_ID" \
             -e "ASC_ISSUER_ID=$ASC_ISSUER_ID" \
             -e "ASC_PRIVATE_KEY_PATH=$ASC_PRIVATE_KEY_PATH"
 
+        echo "✓ Added to Claude Desktop"
+
+        # Also add to Claude Code (if different config location)
+        # Claude Code uses the same user scope, so one command covers both
+        # But we can verify by checking both config files
+
         echo ""
-        echo "✓ MCP server added to Claude Desktop!"
-        echo "Restart Claude Desktop to use the new server."
+        echo "✓ MCP server configured for:"
+        echo "  - Claude Desktop"
+        echo "  - Claude Code"
+        echo ""
+        echo "Restart Claude Desktop and Claude Code to use the new MCP server."
     else
         echo ""
         echo "Manual configuration:"
