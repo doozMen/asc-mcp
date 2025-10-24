@@ -1,15 +1,22 @@
 import Foundation
 import Logging
+import Subprocess
+
+#if canImport(System)
+@preconcurrency import System
+#else
+@preconcurrency import SystemPackage
+#endif
 
 /// Thread-safe actor for executing Firebase CLI commands
 actor FirebaseCLI {
     private let logger: Logger
     private var cachedPath: String?
-    
+
     init(logger: Logger) {
         self.logger = logger
     }
-    
+
     /// Detects Firebase CLI installation path
     /// - Returns: Absolute path to firebase CLI executable
     /// - Throws: FirebaseCLIError.notInstalled if Firebase CLI is not found
@@ -19,18 +26,18 @@ actor FirebaseCLI {
             logger.debug("Using cached Firebase CLI path", metadata: ["path": "\(cached)"])
             return cached
         }
-        
+
         logger.info("Detecting Firebase CLI installation...")
-        
+
         // Common Homebrew installation paths (check these first for performance)
         let commonPaths = [
             "/opt/homebrew/bin/firebase",  // Apple Silicon Homebrew
             "/usr/local/bin/firebase",     // Intel Homebrew
             "/usr/bin/firebase"            // System installation
         ]
-        
+
         let fileManager = FileManager.default
-        
+
         for path in commonPaths {
             if fileManager.isExecutableFile(atPath: path) {
                 logger.info("Found Firebase CLI at common path", metadata: ["path": "\(path)"])
@@ -38,26 +45,35 @@ actor FirebaseCLI {
                 return path
             }
         }
-        
+
         // Fallback to which command
         logger.debug("Common paths failed, trying 'which firebase'")
-        
+
         do {
-            let (output, _) = try await executeCommand(
-                "/usr/bin/which",
-                arguments: ["firebase"]
+            let result = try await Subprocess.run(
+                .path("/usr/bin/which"),
+                arguments: ["firebase"],
+                output: .string(limit: 1024)
             )
-            
-            let trimmedPath = output.trimmingCharacters(in: .whitespacesAndNewlines)
-            
+
+            guard result.terminationStatus.isSuccess else {
+                throw FirebaseCLIError.notInstalled
+            }
+
+            guard let output = result.standardOutput else {
+                throw FirebaseCLIError.notInstalled
+            }
+
+            let trimmedPath = output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+
             guard !trimmedPath.isEmpty, fileManager.isExecutableFile(atPath: trimmedPath) else {
                 throw FirebaseCLIError.notInstalled
             }
-            
+
             logger.info("Found Firebase CLI via which", metadata: ["path": "\(trimmedPath)"])
             cachedPath = trimmedPath
             return trimmedPath
-            
+
         } catch {
             logger.error("Firebase CLI not found", metadata: [
                 "error": "\(error)",
@@ -66,7 +82,7 @@ actor FirebaseCLI {
             throw FirebaseCLIError.notInstalled
         }
     }
-    
+
     /// Uploads dSYM files to Firebase Crashlytics
     /// - Parameters:
     ///   - firebaseAppID: Firebase App ID (e.g., "1:123456789:ios:abc123")
@@ -81,92 +97,81 @@ actor FirebaseCLI {
             logger.warning("No dSYM paths provided for upload")
             return ("", "No dSYM paths provided")
         }
-        
+
         logger.info("Uploading dSYMs to Firebase Crashlytics", metadata: [
             "appID": "\(firebaseAppID)",
             "fileCount": "\(dsymPaths.count)"
         ])
-        
+
         let firebasePath = try await detectFirebaseCLI()
-        
+
         // Build command arguments
         var arguments = [
             "crashlytics:symbols:upload",
             "--app", firebaseAppID
         ]
         arguments.append(contentsOf: dsymPaths)
-        
+
         logger.debug("Executing Firebase command", metadata: [
             "command": "firebase \(arguments.joined(separator: " "))"
         ])
-        
+
         do {
-            let (output, error) = try await executeCommand(
-                firebasePath,
-                arguments: arguments
+            // Run subprocess and capture output with streaming for progress
+            let result = try await Subprocess.run(
+                .path(FilePath(firebasePath)),
+                arguments: Subprocess.Arguments(arguments),
+                output: .string(limit: .max),
+                error: .string(limit: .max)
             )
-            
+
+            let output = result.standardOutput ?? ""
+            let error = result.standardError ?? ""
+
+            // Log output lines for visibility
+            if !output.isEmpty {
+                output.split(separator: "\n").forEach { line in
+                    logger.trace("Firebase output", metadata: ["line": "\(line)"])
+                }
+            }
+
+            if !error.isEmpty {
+                error.split(separator: "\n").forEach { line in
+                    logger.trace("Firebase error", metadata: ["line": "\(line)"])
+                }
+            }
+
+            guard result.terminationStatus.isSuccess else {
+                let command = "firebase \(arguments.joined(separator: " "))"
+                let exitCode: Int
+                if case .exited(let code) = result.terminationStatus {
+                    exitCode = Int(code)
+                } else {
+                    exitCode = -1
+                }
+                logger.error("Firebase upload failed", metadata: [
+                    "command": "\(command)",
+                    "exitCode": "\(exitCode)"
+                ])
+                throw FirebaseCLIError.commandFailed(command, exitCode)
+            }
+
             logger.info("Firebase upload completed successfully", metadata: [
                 "outputLength": "\(output.count)",
                 "errorLength": "\(error.count)"
             ])
-            
+
             return (output, error)
-            
+
         } catch let FirebaseCLIError.commandFailed(command, status) {
-            logger.error("Firebase upload failed", metadata: [
-                "command": "\(command)",
-                "exitCode": "\(status)"
-            ])
             throw FirebaseCLIError.commandFailed(command, status)
-            
+
         } catch {
             logger.error("Firebase upload error", metadata: [
                 "error": "\(error)"
             ])
             throw error
         }
-    }
-    
-    /// Executes a command and returns stdout and stderr
-    /// - Parameters:
-    ///   - executable: Absolute path to executable
-    ///   - arguments: Command arguments
-    /// - Returns: Tuple containing stdout and stderr
-    /// - Throws: FirebaseCLIError.commandFailed if process exits with non-zero status
-    private func executeCommand(
-        _ executable: String,
-        arguments: [String]
-    ) async throws -> (output: String, error: String) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executable)
-        process.arguments = arguments
-        
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-        
-        try process.run()
-        
-        // Wait for process to complete
-        process.waitUntilExit()
-        
-        // Read output and error
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        
-        let output = String(data: outputData, encoding: .utf8) ?? ""
-        let error = String(data: errorData, encoding: .utf8) ?? ""
-        
-        // Check termination status
-        guard process.terminationStatus == 0 else {
-            let command = ([executable] + arguments).joined(separator: " ")
-            throw FirebaseCLIError.commandFailed(command, Int(process.terminationStatus))
-        }
-        
-        return (output, error)
     }
 }
 

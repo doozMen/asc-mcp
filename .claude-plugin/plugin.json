@@ -1,0 +1,28 @@
+{
+  "name": "appstoreconnect-mcp",
+  "version": "1.0.0",
+  "description": "App Store Connect integration with Firebase Crashlytics support for iOS developers",
+  "author": {
+    "name": "Stijn Willems",
+    "email": "stijn@dooz.io",
+    "url": "https://github.com/doozMen"
+  },
+  "homepage": "https://github.com/doozMen/asc-mcp",
+  "repository": "https://github.com/doozMen/asc-mcp",
+  "license": "MIT",
+  "keywords": [
+    "app-store-connect",
+    "ios",
+    "firebase",
+    "crashlytics",
+    "dsym",
+    "xcode",
+    "swift",
+    "build-automation",
+    "crash-reporting"
+  ],
+  "icon": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/icon.png",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "mcpServers": "./.mcp.json"
+}

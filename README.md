@@ -2,6 +2,26 @@
 
 MCP server for App Store Connect API integration. Provides tools to query apps, builds, and download dSYM files through the Model Context Protocol.
 
+## 🚀 New: Claude Code Plugin Available!
+
+This MCP server is now available as a complete **Claude Code Plugin** with slash commands, specialized agents, and automated workflows!
+
+**Quick Install:**
+```bash
+/plugin marketplace add github.com/doozMen/asc-mcp
+/plugin install appstoreconnect-mcp@doozMen
+cd ~/.claude/plugins/appstoreconnect-mcp
+./install.sh
+```
+
+**Features:**
+- 4 slash commands for common workflows (`/download-latest-dsyms`, `/upload-dsyms-to-crashlytics`, etc.)
+- iOS crash manager agent for automated symbolication workflows
+- Interactive credential setup guide
+- Comprehensive documentation
+
+**Learn more:** See [PLUGIN_README.md](PLUGIN_README.md) for full plugin documentation and [QUICK_START.md](QUICK_START.md) for 5-minute setup guide.
+
 ## Features
 
 ### App Store Connect Tools

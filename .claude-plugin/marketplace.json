@@ -1,0 +1,27 @@
+{
+  "name": "asc-mcp-marketplace",
+  "owner": {
+    "name": "Stijn Willems",
+    "email": "stijn@dooz.io",
+    "url": "https://github.com/doozMen"
+  },
+  "description": "App Store Connect MCP Plugin Marketplace",
+  "metadata": {
+    "description": "Self-hosted marketplace for App Store Connect and Firebase Crashlytics integration plugin for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "appstoreconnect-mcp",
+      "source": "./.claude-plugin/plugin.json",
+      "description": "App Store Connect integration with Firebase Crashlytics support for iOS developers",
+      "version": "1.0.0",
+      "author": {
+        "name": "Stijn Willems",
+        "email": "stijn@dooz.io",
+        "url": "https://github.com/doozMen"
+      },
+      "category": "development-tools",
+      "tags": ["ios", "swift", "app-store-connect", "firebase", "crashlytics", "dsym", "xcode", "builds"]
+    }
+  ]
+}

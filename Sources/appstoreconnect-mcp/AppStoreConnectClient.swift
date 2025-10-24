@@ -2,6 +2,13 @@ import AppStoreAPI
 import AppStoreConnect
 import Foundation
 import Logging
+import Subprocess
+
+#if canImport(System)
+@preconcurrency import System
+#else
+@preconcurrency import SystemPackage
+#endif
 
 /// Errors specific to App Store Connect operations
 enum ASCError: Error, LocalizedError {
@@ -254,21 +261,23 @@ actor AppStoreConnectClientWrapper {
         metadata: ["zipPath": "\(zipPath.path)", "destination": "\(dsymDir.path)"])
 
       // Use unzip command to extract
-      let process = Process()
-      process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-      process.arguments = ["-q", zipPath.path, "-d", dsymDir.path]
+      let result = try await Subprocess.run(
+        .path(FilePath("/usr/bin/unzip")),
+        arguments: ["-q", zipPath.path, "-d", dsymDir.path],
+        output: .string(limit: .max),
+        error: .string(limit: .max)
+      )
 
-      let outputPipe = Pipe()
-      let errorPipe = Pipe()
-      process.standardOutput = outputPipe
-      process.standardError = errorPipe
+      // Log any output for debugging
+      if let output = result.standardOutput, !output.isEmpty {
+        logger.trace("unzip output", metadata: ["output": "\(output)"])
+      }
+      if let error = result.standardError, !error.isEmpty {
+        logger.trace("unzip error", metadata: ["error": "\(error)"])
+      }
 
-      try process.run()
-      process.waitUntilExit()
-
-      guard process.terminationStatus == 0 else {
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+      guard result.terminationStatus.isSuccess else {
+        let errorMessage = result.standardError ?? "Unknown error"
         throw ASCError.downloadFailed("Failed to unzip dSYM files: \(errorMessage)")
       }
 
