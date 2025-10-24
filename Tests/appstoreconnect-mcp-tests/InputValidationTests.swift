@@ -154,10 +154,10 @@ struct InputValidationTests {
     func valueExtensionExtractsString() async throws {
         let stringValue = Value.string("test")
         #expect(stringValue.stringValue == "test")
-        
-        let numberValue = Value.number(123)
-        #expect(numberValue.stringValue == nil)
-        
+
+        let intValue = Value.int(123)
+        #expect(intValue.stringValue == nil)
+
         let boolValue = Value.bool(true)
         #expect(boolValue.stringValue == nil)
     }
