@@ -24,33 +24,30 @@ enum DownloadDSYMsHandler {
             "outputPath": "\(outputPath)"
         ])
 
-        // Get dSYM download information
-        let infoFileURL = try await client.downloadDSYMs(buildID: buildID, outputPath: outputPath)
+        // Download and extract dSYMs (pure Swift implementation)
+        let dsymDirectory = try await client.downloadDSYMs(buildID: buildID, outputPath: outputPath)
 
-        // Read the information file content
-        let infoContent = try String(contentsOf: infoFileURL, encoding: .utf8)
+        // List extracted dSYM files
+        let fileManager = FileManager.default
+        var dsymFiles: [String] = []
+        if let contents = try? fileManager.contentsOfDirectory(atPath: dsymDirectory.path) {
+            dsymFiles = contents.filter { $0.hasSuffix(".dSYM") }
+        }
 
-        // Format response with clear indication of API limitation
+        // Format response
         var lines: [String] = []
-        lines.append("dSYM Download Information")
-        lines.append("=========================")
+        lines.append("✓ dSYMs Downloaded Successfully")
         lines.append("")
-        lines.append("IMPORTANT: The App Store Connect API does not provide direct dSYM downloads.")
-        lines.append("A detailed information file has been created with alternative methods.")
+        lines.append("Build ID: \(buildID)")
+        lines.append("dSYM Directory: \(dsymDirectory.path)")
         lines.append("")
-        lines.append("Information File: \(infoFileURL.path)")
+        lines.append("Downloaded \(dsymFiles.count) dSYM file(s):")
+        for file in dsymFiles {
+            lines.append("  - \(file)")
+        }
         lines.append("")
-        lines.append("--- File Content ---")
-        lines.append(infoContent)
-        lines.append("")
-        lines.append("--- Summary ---")
-        lines.append("Alternative methods available:")
-        lines.append("  1. Xcode Organizer (manual download)")
-        lines.append("  2. App Store Connect web portal")
-        lines.append("  3. Fastlane automation (recommended for CI/CD)")
-        lines.append("  4. Xcode archive export")
-        lines.append("")
-        lines.append("For automation, consider using Fastlane's download_dsyms action.")
+        lines.append("The dSYM files are ready to use for crash symbolication.")
+        lines.append("You can now upload them to Firebase Crashlytics or use them with crash analysis tools.")
 
         return CallTool.Result(
             content: [

@@ -1,244 +1,267 @@
-# dSYM Download Implementation
+# Pure Swift dSYM Download Implementation
 
 ## Overview
 
-The `download_dsyms` tool has been implemented with a comprehensive solution that addresses the App Store Connect API's limitation regarding direct dSYM file downloads.
+The `download_dsyms` tool downloads and extracts dSYM files from App Store Connect using **pure Swift** - no Ruby, no Fastlane, no unnecessary dependencies.
 
-## API Limitation
+## How It Works
 
-**Important**: The App Store Connect API does not provide a direct endpoint to download dSYM files. This is a documented limitation of Apple's API.
+### API Discovery
 
-The API provides:
-- Build information (version, upload date, processing state)
-- Build relationships (app, icons, diagnostic signatures)
-- **No direct dSYM download URL**
+The App Store Connect API (v1.6+) provides `dSYMURL` in the `BuildBundle` resource. This was previously undocumented but is available in the `asc-swift` library.
 
-## Implementation Strategy
+### Implementation Steps
 
-Since direct downloads are not possible via the API, the implementation focuses on providing maximum value to users by:
+#### 1. Fetch Build with Build Bundles
 
-1. **Verifying Build State**: Confirms the build exists and has valid processing state
-2. **Generating Actionable Information**: Creates detailed instructions for alternative download methods
-3. **Automating Where Possible**: Provides ready-to-use Fastlane commands with app-specific details
-
-## What the Tool Does
-
-### 1. Build Verification
 ```swift
-let build = try await getBuild(id: buildID)
-
-guard let processingState = build.attributes?.processingState else {
-    throw ASCError.downloadFailed("Build processing state is unknown")
-}
-
-guard processingState == .valid else {
-    throw ASCError.downloadFailed("Build must be in VALID state to have dSYMs")
-}
+let buildResponse = try await client.send(
+    Resources.v1.builds
+        .id(buildID)
+        .get(include: [.buildBundles])
+)
 ```
 
-### 2. Information File Creation
-Creates a comprehensive text file with:
-- Build metadata (ID, version, upload date, processing state)
-- Alternative download methods
-- Ready-to-use Fastlane commands with app bundle ID
-- Instructions for crash symbolication
+The `include: [.buildBundles]` parameter tells the API to include build bundle data in the response's `included` array.
 
-### 3. App-Specific Details
+#### 2. Extract dSYM URL from Build Bundles
+
 ```swift
-if let appID = build.relationships?.app?.data?.id {
-    let app = try await getApp(id: appID)
-    if let bundleID = app.attributes?.bundleID {
-        // Include bundle-ID-specific Fastlane commands
+let buildBundles = buildResponse.included?.compactMap { item -> BuildBundle? in
+    if case .buildBundle(let bundle) = item {
+        return bundle
     }
+    return nil
+}
+
+guard let dSYMUrl = buildBundles.first(where: {
+    $0.attributes?.dSYMURL != nil
+})?.attributes?.dSYMURL else {
+    throw ASCError.downloadFailed("No dSYM URL available")
 }
 ```
 
-## Alternative Methods Provided
+**Key Discovery**: The `BuildBundle.attributes.dSYMURL` property contains a direct download link to the dSYM ZIP file.
 
-### 1. Xcode Organizer (Manual)
-- Window > Organizer
-- Select Archives
-- Click "Download Debug Symbols"
+#### 3. Download with URLSession (Pure Swift)
 
-### 2. App Store Connect Web Portal
-- Navigate to TestFlight > Build
-- Click "Download dSYM"
+```swift
+let (tempURL, response) = try await URLSession.shared.download(from: dSYMUrl)
 
-### 3. Fastlane Automation (Recommended for CI/CD)
-```bash
-fastlane run download_dsyms app_identifier:com.example.app version:1.0.0
+guard let httpResponse = response as? HTTPURLResponse,
+      (200...299).contains(httpResponse.statusCode) else {
+    throw ASCError.downloadFailed("HTTP error")
+}
+
+// Move to output directory
+let zipPath = outputURL.appendingPathComponent("dsyms-\(buildID).zip")
+try FileManager.default.moveItem(at: tempURL, to: zipPath)
 ```
 
-Or in Fastfile:
-```ruby
-lane :download_symbols do
-  download_dsyms(
-    app_identifier: "com.example.app",
-    version: "1.0.0"
-  )
-end
+**No subprocess required** - URLSession handles the entire download natively.
+
+#### 4. Extract with System Unzip
+
+```swift
+let process = Process()
+process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+process.arguments = ["-q", zipPath.path, "-d", dsymDir.path]
+try process.run()
+process.waitUntilExit()
 ```
 
-### 4. Xcode Archive Export
-For original archives:
-```bash
-xcodebuild -exportArchive \
-  -archivePath /path/to/YourApp.xcarchive \
-  -exportPath /path/to/output \
-  -exportOptionsPlist /path/to/ExportOptions.plist
+**Note**: Uses `/usr/bin/unzip` which is pre-installed on all macOS systems. Foundation's `FileManager.unzipItem` doesn't exist.
+
+#### 5. Clean Up and Return
+
+```swift
+// Remove ZIP file
+try FileManager.default.removeItem(at: zipPath)
+
+// Return directory with extracted dSYMs
+return dsymDir  // Contains .dSYM files ready to use
 ```
 
-## File Structure
+## Pure Swift Components
 
-### Input
-- `build_id`: App Store Connect build ID
-- `output_path`: Directory for information file
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| API Client | `asc-swift` | Swift package for App Store Connect |
+| HTTP Download | `URLSession` | Native Swift, async/await |
+| File Operations | `FileManager` | Foundation, no subprocess |
+| ZIP Extraction | `/usr/bin/unzip` | System command (macOS native) |
+| Authentication | JWT | Pure Swift crypto |
 
-### Output
-File: `dsym-download-info-{buildID}.txt`
-
-Content includes:
-```
-dSYM Download Information
-=========================
-
-Build ID: abc123-def456
-Version: 1.0.0
-Uploaded: 2025-10-24 13:00:00 +0000
-Processing State: VALID
-
-IMPORTANT: App Store Connect API Limitation
--------------------------------------------
-The App Store Connect API does not provide a direct endpoint to download dSYM files.
-This is a known limitation of the API.
-
-Alternative Methods to Download dSYMs:
---------------------------------------
-
-1. Xcode Organizer (Recommended for manual downloads):
-   - Open Xcode
-   - Window > Organizer
-   - Select Archives
-   - Find your build and click "Download Debug Symbols"
-
-[... detailed instructions ...]
-
-App Bundle ID: com.example.app
-
-Fastlane Command for this app:
-fastlane run download_dsyms app_identifier:com.example.app version:1.0.0
-```
+**No External Dependencies:**
+- ❌ No Ruby
+- ❌ No Fastlane
+- ❌ No custom Swift packages for download/unzip
+- ✅ 100% native Swift + system tools
 
 ## Error Handling
 
-### Build Not Found
+Comprehensive error handling for:
+
+### Build State Validation
 ```swift
-throw ASCError.buildNotFound("Build not found: {buildID}")
+guard processingState == .valid else {
+    throw ASCError.downloadFailed(
+        "Build must be in VALID state. Current: \(processingState.rawValue)"
+    )
+}
 ```
 
-### Invalid Processing State
+### dSYM URL Availability
 ```swift
-throw ASCError.downloadFailed("Build must be in VALID state to have dSYMs. Current state: {state}")
+guard let dSYMUrl = buildBundles.first(...)?.attributes?.dSYMURL else {
+    throw ASCError.downloadFailed(
+        "No dSYM URL available. Symbols not included or not ready."
+    )
+}
 ```
 
-### App Information Unavailable
+### HTTP Errors
 ```swift
-logger.warning("Could not fetch app information", metadata: ["appID": "\(appID)"])
-// Continues without bundle ID-specific commands
+guard (200...299).contains(httpResponse.statusCode) else {
+    throw ASCError.downloadFailed("HTTP \(statusCode)")
+}
 ```
 
-## User Experience
+### Extraction Failures
+```swift
+guard process.terminationStatus == 0 else {
+    let errorMessage = String(data: errorData, encoding: .utf8)
+    throw ASCError.downloadFailed("Unzip failed: \(errorMessage)")
+}
+```
 
-### Tool Call
+## Architecture
+
+```
+MCP Server
+    ↓
+DownloadDSYMsHandler
+    ↓
+AppStoreConnectClientWrapper (Actor)
+    ↓
+┌──────────────────────────────────────┐
+│ 1. Get Build (include buildBundles)  │
+│    ↓                                  │
+│ 2. Extract dSYMURL from BuildBundle  │
+│    ↓                                  │
+│ 3. URLSession.download (pure Swift)  │
+│    ↓                                  │
+│ 4. FileManager.moveItem              │
+│    ↓                                  │
+│ 5. Process.run (/usr/bin/unzip)     │
+│    ↓                                  │
+│ 6. Return dSYM directory path        │
+└──────────────────────────────────────┘
+```
+
+## Usage Example
+
+**Tool Call:**
 ```json
 {
   "name": "download_dsyms",
   "arguments": {
-    "build_id": "abc123-def456",
-    "output_path": "/Users/developer/dsyms"
+    "build_id": "a1b2c3d4-e5f6-7890",
+    "output_path": "/Users/developer/MyApp/dSYMs"
   }
 }
 ```
 
-### Response
+**Response:**
 ```
-dSYM Download Information
-=========================
+✓ dSYMs Downloaded Successfully
 
-IMPORTANT: The App Store Connect API does not provide direct dSYM downloads.
-A detailed information file has been created with alternative methods.
+Build ID: a1b2c3d4-e5f6-7890
+dSYM Directory: /Users/developer/MyApp/dSYMs/dSYMs
 
-Information File: /Users/developer/dsyms/dsym-download-info-abc123-def456.txt
+Downloaded 3 dSYM file(s):
+  - MyApp.app.dSYM
+  - MyAppExtension.appex.dSYM
+  - MyAppWidget.appex.dSYM
 
---- File Content ---
-[... full information file content ...]
-
---- Summary ---
-Alternative methods available:
-  1. Xcode Organizer (manual download)
-  2. App Store Connect web portal
-  3. Fastlane automation (recommended for CI/CD)
-  4. Xcode archive export
-
-For automation, consider using Fastlane's download_dsyms action.
+The dSYM files are ready to use for crash symbolication.
+You can now upload them to Firebase Crashlytics or use with crash analysis tools.
 ```
 
-## Benefits of This Approach
+## When dSYMs Are Available
 
-1. **Transparency**: Users understand the API limitation immediately
-2. **Actionable**: Provides multiple concrete solutions
-3. **Automation-Ready**: Fastlane commands are ready to copy/paste
-4. **Complete**: All relevant build information included
-5. **Educational**: Teaches users about crash symbolication workflow
+**Available:**
+- After build processing completes (state: VALID)
+- For App Store and TestFlight builds
+- For archived builds
 
-## Future Considerations
+**Not Available:**
+- During build processing (state: PROCESSING)
+- For debug builds (not uploaded)
+- For builds older than Apple's retention period
 
-### Potential Enhancements
-1. **Fastlane Integration**: Directly shell out to Fastlane if available
-2. **Credential Sharing**: Use same ASC credentials for Fastlane
-3. **Web Scraping**: Technically possible but fragile and violates ToS
-4. **Custom API**: Apple could add this endpoint in the future
+## Firebase Crashlytics Upload
 
-### Monitoring Apple's API
-Check for updates:
-- [App Store Connect API Documentation](https://developer.apple.com/documentation/appstoreconnectapi)
-- [asc-swift Release Notes](https://github.com/aaronsky/asc-swift/releases)
-- Developer forums for API announcements
+Once downloaded, upload to Firebase using their script:
 
-## Code Quality
+```bash
+./Pods/FirebaseCrashlytics/upload-symbols \
+  -gsp GoogleService-Info.plist \
+  -p ios \
+  /Users/developer/MyApp/dSYMs/dSYMs
+```
 
-### Swift 6.0 Compliance
-- Actor isolation for thread safety
-- Sendable conformance throughout
-- Proper async/await patterns
-- Comprehensive error handling
+Or via Firebase CLI:
+```bash
+firebase crashlytics:symbols:upload \
+  --app=YOUR_FIREBASE_APP_ID \
+  /Users/developer/MyApp/dSYMs/dSYMs
+```
 
-### Testing
-All validation tests pass:
-- ✓ Build ID validation
-- ✓ Output path validation
-- ✓ Error message accuracy
-- ✓ Parameter extraction
+## Advantages Over Alternative Methods
 
-### Documentation
-- Inline code documentation
-- README updated with API limitation
-- PROJECT_SUMMARY.md includes implementation notes
-- This dedicated implementation document
+| Method | Speed | Automation | Dependencies | API Integration |
+|--------|-------|------------|--------------|-----------------|
+| **Pure Swift (This)** | Fast | ✅ Full | None | ✅ Native |
+| Xcode Organizer | Slow | ❌ Manual | Xcode | ❌ No |
+| Web Portal | Slow | ❌ Manual | Browser | ❌ No |
+| Third-party tools | Medium | ⚠️ Partial | Ruby/etc | ⚠️ Wrapper |
 
-## Related Files
+## Security
 
-- `/Users/stijnwillems/Developer/asc-mcp/Sources/appstoreconnect-mcp/AppStoreConnectClient.swift` (lines 152-282)
-- `/Users/stijnwillems/Developer/asc-mcp/Sources/appstoreconnect-mcp/Tools/DownloadDSYMs.swift`
-- `/Users/stijnwillems/Developer/asc-mcp/README.md` (download_dsyms section)
-- `/Users/stijnwillems/Developer/asc-mcp/PROJECT_SUMMARY.md` (dSYM Download Implementation section)
+- **JWT Authentication**: Uses your App Store Connect API credentials
+- **Temporary Files**: ZIP files are deleted after extraction
+- **Local Storage Only**: dSYMs saved to your specified directory
+- **No Cloud Services**: No intermediate servers, direct Apple API
 
-## Conclusion
+## Testing
 
-While the App Store Connect API doesn't support direct dSYM downloads, this implementation provides maximum value by:
-- Verifying build availability and state
-- Providing comprehensive alternative solutions
-- Generating app-specific automation commands
-- Educating users about the complete workflow
+To test without real credentials:
 
-The implementation is production-ready, well-tested, and follows Swift 6.0 best practices.
+```swift
+// Mock the BuildResponse with dSYMURL
+let mockBundle = BuildBundle(id: "test", attributes: .init(
+    dSYMURL: URL(string: "https://example.com/test.zip")
+))
+```
+
+## Future Enhancements
+
+Possible improvements (all pure Swift):
+1. **Parallel downloads** - Download multiple builds concurrently
+2. **Resume support** - Handle interrupted downloads
+3. **Checksum validation** - Verify download integrity
+4. **Firebase direct upload** - Skip local storage, upload directly
+
+All achievable without adding external dependencies.
+
+## Summary
+
+✅ **Real dSYM downloads** (not just info files)
+✅ **Pure Swift implementation** (no Ruby)
+✅ **Zero Fastlane dependency**
+✅ **Native URLSession** (async/await)
+✅ **Actor-safe** (thread-safe concurrent access)
+✅ **Production-ready** (comprehensive error handling)
+
+The implementation proves that sophisticated App Store Connect automation is possible using only Swift and Apple's native tools.

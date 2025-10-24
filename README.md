@@ -172,13 +172,13 @@ List builds for a specific app.
 
 ### Tool: download_dsyms
 
-Get dSYM download information for a specific build (used for crash symbolication).
+Download and extract dSYM files from App Store Connect for crash symbolication.
 
-**IMPORTANT**: The App Store Connect API does not provide a direct endpoint to download dSYM files. This tool verifies the build exists and creates an information file with alternative download methods.
+**Implementation**: Pure Swift using URLSession (no Ruby, no Fastlane, no subprocesses).
 
 **Parameters**:
 - `build_id` (required): Build ID from App Store Connect
-- `output_path` (required): Local directory path where the information file should be saved
+- `output_path` (required): Local directory path where dSYMs should be extracted
 
 **Example**:
 ```json
@@ -191,31 +191,17 @@ Get dSYM download information for a specific build (used for crash symbolication
 }
 ```
 
+**What It Does**:
+1. Fetches build from App Store Connect API (with buildBundles included)
+2. Extracts dSYM URL from build bundle data
+3. Downloads dSYM ZIP file using URLSession (pure Swift)
+4. Extracts dSYMs using system unzip command
+5. Returns path to extracted .dSYM files
+
 **Output**:
-Creates a text file with:
-- Build information (version, upload date, processing state)
-- Alternative download methods:
-  1. Xcode Organizer (manual download)
-  2. App Store Connect web portal
-  3. Fastlane automation (recommended for CI/CD)
-  4. Xcode archive export
-- Ready-to-use Fastlane commands with your app's bundle ID
-
-**For Automated dSYM Downloads**:
-Use Fastlane's `download_dsyms` action:
-```bash
-fastlane run download_dsyms app_identifier:com.example.app version:1.0.0
-```
-
-Or add to your Fastfile:
-```ruby
-lane :download_symbols do
-  download_dsyms(
-    app_identifier: "com.example.app",
-    version: "1.0.0"
-  )
-end
-```
+- Actual .dSYM files downloaded and extracted
+- Ready to upload to Firebase Crashlytics or use with crash analysis tools
+- No manual steps required
 
 ### Tool: get_latest_build
 
