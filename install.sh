@@ -47,13 +47,13 @@ if command -v appstoreconnect-mcp &> /dev/null; then
         read -r ASC_PRIVATE_KEY_PATH
 
         # Add using claude CLI
-        claude add mcp appstoreconnect \
-            --command appstoreconnect-mcp \
-            --args "--log-level" "info" \
-            --env "PATH=\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin" \
-            --env "ASC_KEY_ID=$ASC_KEY_ID" \
-            --env "ASC_ISSUER_ID=$ASC_ISSUER_ID" \
-            --env "ASC_PRIVATE_KEY_PATH=$ASC_PRIVATE_KEY_PATH"
+        claude mcp add appstoreconnect appstoreconnect-mcp \
+            --log-level info \
+            -s user \
+            -e "PATH=\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin" \
+            -e "ASC_KEY_ID=$ASC_KEY_ID" \
+            -e "ASC_ISSUER_ID=$ASC_ISSUER_ID" \
+            -e "ASC_PRIVATE_KEY_PATH=$ASC_PRIVATE_KEY_PATH"
 
         echo ""
         echo "✓ MCP server added to Claude Desktop!"
