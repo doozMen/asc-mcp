@@ -25,22 +25,57 @@ appstoreconnect-mcp --version
 # Verify installation
 if command -v appstoreconnect-mcp &> /dev/null; then
     echo ""
-    echo "Success! App Store Connect MCP installed."
+    echo "✓ App Store Connect MCP installed successfully!"
     echo ""
-    echo "Add to Claude Desktop config:"
-    echo ""
-    echo '  "appstoreconnect": {'
-    echo '    "command": "appstoreconnect-mcp",'
-    echo '    "args": ["--log-level", "info"],'
-    echo '    "env": {'
-    echo '      "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",'
-    echo '      "ASC_KEY_ID": "YOUR_KEY_ID",'
-    echo '      "ASC_ISSUER_ID": "YOUR_ISSUER_ID",'
-    echo '      "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
-    echo '    }'
-    echo '  }'
-    echo ""
-    echo "Remember to replace the placeholder values with your actual credentials!"
+
+    # Offer to add to Claude config automatically
+    echo "Would you like to add this MCP server to Claude Desktop? (y/n)"
+    read -r response
+
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "Adding to Claude Desktop configuration..."
+
+        # Prompt for credentials
+        echo ""
+        echo "Enter your App Store Connect credentials:"
+        echo -n "ASC_KEY_ID: "
+        read -r ASC_KEY_ID
+        echo -n "ASC_ISSUER_ID: "
+        read -r ASC_ISSUER_ID
+        echo -n "ASC_PRIVATE_KEY_PATH (full path to .p8 file): "
+        read -r ASC_PRIVATE_KEY_PATH
+
+        # Add using claude CLI
+        claude add mcp appstoreconnect \
+            --command appstoreconnect-mcp \
+            --args "--log-level" "info" \
+            --env "PATH=\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin" \
+            --env "ASC_KEY_ID=$ASC_KEY_ID" \
+            --env "ASC_ISSUER_ID=$ASC_ISSUER_ID" \
+            --env "ASC_PRIVATE_KEY_PATH=$ASC_PRIVATE_KEY_PATH"
+
+        echo ""
+        echo "✓ MCP server added to Claude Desktop!"
+        echo "Restart Claude Desktop to use the new server."
+    else
+        echo ""
+        echo "Manual configuration:"
+        echo "Add this to ~/Library/Application Support/Claude/claude_desktop_config.json:"
+        echo ""
+        echo '  "appstoreconnect": {'
+        echo '    "command": "appstoreconnect-mcp",'
+        echo '    "args": ["--log-level", "info"],'
+        echo '    "env": {'
+        echo '      "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",'
+        echo '      "ASC_KEY_ID": "YOUR_KEY_ID",'
+        echo '      "ASC_ISSUER_ID": "YOUR_ISSUER_ID",'
+        echo '      "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
+        echo '    }'
+        echo '  }'
+        echo ""
+        echo "Replace placeholder values with your actual credentials."
+    fi
 else
     echo "Installation failed. Check errors above."
     exit 1
