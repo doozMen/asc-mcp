@@ -103,9 +103,9 @@ if command -v appstoreconnect-mcp &> /dev/null; then
         fi
 
         # Add using claude CLI
-        # Syntax: claude mcp add <name> <command> [command-args...] [options]
+        # Note: --log-level is not supported by claude mcp add
+        # It will be configured in the MCP server args separately if needed
         claude mcp add -s user appstoreconnect appstoreconnect-mcp \
-            --log-level info \
             -e "PATH=\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin" \
             -e "ASC_KEY_ID=$ASC_KEY_ID" \
             -e "ASC_ISSUER_ID=$ASC_ISSUER_ID" \
