@@ -1,0 +1,35 @@
+# Swift Build
+.build/
+.swiftpm/
+*.xcodeproj
+*.xcworkspace
+
+# Swift Package Manager
+.DS_Store
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Credentials
+*.p8
+AuthKey_*.p8
+
+# Agent workspace
+.agent-workspace/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

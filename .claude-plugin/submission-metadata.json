@@ -1,0 +1,94 @@
+{
+  "id": "io.dooz.appstoreconnect-mcp",
+  "name": "App Store Connect MCP",
+  "version": "1.0.0",
+  "description": "Automate App Store Connect workflows and Firebase Crashlytics integration for iOS developers",
+  "longDescription": "Seamlessly integrate App Store Connect and Firebase Crashlytics into your Claude Code workflow. This plugin provides comprehensive automation for iOS build management, dSYM downloads, and crash symbolication.\n\n**Key Features:**\n\n**App Store Connect Integration:** Query apps, monitor builds, check status, and download dSYM files with pure Swift implementation—no Ruby, Fastlane, or CocoaPods required.\n\n**Firebase Crashlytics Support:** Automated dSYM uploads from App Store Connect, Xcode archives, or local paths. Streamline crash symbolication workflows.\n\n**Workflow Automation:** Four slash commands automate common tasks: download latest dSYMs, upload to Crashlytics, check build status, and interactive credential setup.\n\n**Expert Agent:** The ios-crash-manager agent specializes in crash symbolication troubleshooting, dSYM management, and multi-step automation workflows.\n\n**Pure Swift:** Built with Swift 6.0, actor-based concurrency, and modern async/await patterns. Thread-safe, performant, and maintainable.\n\n**Security First:** Credentials stored securely in Claude Code configuration. Private keys never leave your machine. All sensitive data redacted from logs.\n\n**Use Cases:** Perfect for iOS developers managing TestFlight builds, debugging production crashes, automating CI/CD dSYM workflows, and monitoring App Store submissions.",
+  "author": {
+    "name": "Stijn Willems",
+    "email": "stijn@dooz.io",
+    "url": "https://github.com/doozMen"
+  },
+  "category": "development-tools",
+  "subcategories": ["ios", "mobile", "automation", "debugging"],
+  "tags": ["ios", "swift", "app-store-connect", "firebase", "crashlytics", "dsym", "xcode", "builds", "crash-reporting", "testflight"],
+  "icon": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/icon.png",
+  "screenshots": [
+    {
+      "url": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/screenshot-1.png",
+      "caption": "Download latest dSYMs with single command"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/screenshot-2.png",
+      "caption": "Upload dSYMs to Firebase Crashlytics automatically"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/screenshot-3.png",
+      "caption": "Check build status across all apps"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/screenshot-4.png",
+      "caption": "Interactive credential setup guide"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/doozMen/asc-mcp/main/assets/screenshot-5.png",
+      "caption": "Find and manage Xcode archives"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doozMen/asc-mcp"
+  },
+  "homepage": "https://github.com/doozMen/asc-mcp",
+  "documentation": "https://github.com/doozMen/asc-mcp/blob/main/README.md",
+  "changelog": "https://github.com/doozMen/asc-mcp/blob/main/CHANGELOG.md",
+  "requirements": {
+    "claudeCode": ">=1.0.0",
+    "os": ["darwin"],
+    "other": [
+      "macOS 13.0+",
+      "Swift 6.0+",
+      "Xcode 16+ (for building)",
+      "App Store Connect API credentials",
+      "Optional: Firebase CLI for Crashlytics integration"
+    ]
+  },
+  "features": [
+    {
+      "name": "App Store Connect Integration",
+      "description": "Full API access to apps, builds, and dSYM downloads",
+      "icon": "📱"
+    },
+    {
+      "name": "Firebase Crashlytics Support",
+      "description": "Automated dSYM uploads for crash symbolication",
+      "icon": "🔥"
+    },
+    {
+      "name": "Pure Swift Implementation",
+      "description": "No Ruby, Fastlane, or CocoaPods dependencies",
+      "icon": "🦅"
+    },
+    {
+      "name": "Workflow Automation",
+      "description": "Four slash commands for common iOS development tasks",
+      "icon": "⚡"
+    },
+    {
+      "name": "Expert Agent",
+      "description": "ios-crash-manager specializes in crash analysis workflows",
+      "icon": "🤖"
+    },
+    {
+      "name": "Secure by Default",
+      "description": "Credentials stay local, sensitive data redacted",
+      "icon": "🔒"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/doozMen/asc-mcp/issues",
+    "documentation": "https://github.com/doozMen/asc-mcp/blob/main/README.md",
+    "email": "stijn@dooz.io"
+  }
+}

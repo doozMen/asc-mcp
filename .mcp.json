@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "asc": {
+      "command": "asc",
+      "args": ["--log-level", "info"]
+    }
+  }
+}
