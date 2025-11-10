@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "Installing App Store Connect MCP Plugin..."
 echo ""
@@ -26,13 +25,17 @@ if command -v asc &> /dev/null; then
     rm -f ~/.swiftpm/bin/asc
 fi
 
+# Enable exit on error AFTER optional binary removal
+set -e
+
 # Build the Swift MCP server
-echo "Building MCP server in release mode..."
-xcrun swift build -c release
+BUILD_CONFIG="${BUILD_CONFIG:-release}"
+echo "Building MCP server in $BUILD_CONFIG mode..."
+xcrun swift build -c "$BUILD_CONFIG"
 
 # Install to ~/.swiftpm/bin
 echo "Installing to ~/.swiftpm/bin..."
-xcrun swift package experimental-install --product appstoreconnect-mcp
+xcrun swift package experimental-install --product asc
 
 # Verify installation
 if ! command -v asc &> /dev/null; then
@@ -123,6 +126,8 @@ else
     read -r ASC_PRIVATE_KEY_PATH
 fi
 
+# Check if credentials were provided
+if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY_PATH" ]; then
     # Update .mcp.json in plugin directory with credentials
     echo ""
     echo "Updating plugin configuration with credentials..."
@@ -151,7 +156,7 @@ EOF_MCP
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "Plugin Location: $PLUGIN_DIR"
-    echo "MCP Binary: ~/.swiftpm/bin/appstoreconnect-mcp"
+    echo "MCP Binary: ~/.swiftpm/bin/asc"
     echo "Configuration: $PLUGIN_DIR/.mcp.json"
     echo ""
     echo "🔄 Restart Claude Code to load the plugin"
@@ -161,7 +166,6 @@ EOF_MCP
     echo "  'Show me the latest build for my app'"
     echo "  'Register bundle ID com.example.myapp'"
     echo ""
-
 else
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
