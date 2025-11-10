@@ -56,6 +56,32 @@ echo ""
 # Plugin is automatically discovered by Claude Code from .claude-plugin/plugin.json
 # But we still need to configure App Store Connect credentials
 
+# Check if running in non-interactive mode (e.g., from build-all-mcps.sh)
+if [ ! -t 0 ]; then
+    # Non-interactive mode - skip credential configuration
+    echo ""
+    echo "✓ Installation complete!"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📋 Configure Credentials in ~/.claude/settings.json"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Add App Store Connect credentials to ~/.claude/settings.json:"
+    echo ""
+    echo '{
+  "env": {
+    "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",
+    "ASC_KEY_ID": "YOUR_KEY_ID",
+    "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
+    "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"
+  }
+}'
+    echo ""
+    echo "Then restart Claude Code."
+    exit 0
+fi
+
+# Interactive mode - offer credential configuration
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📋 Credential Configuration Required"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
