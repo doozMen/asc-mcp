@@ -1,0 +1,70 @@
+Certificate Management Tools Implementation - Summary
+=====================================================
+
+Status: COMPLETE AND TESTED
+
+Files Created (4):
+------------------
+✓ Sources/appstoreconnect-mcp/Tools/ListCertificates.swift
+✓ Sources/appstoreconnect-mcp/Tools/CreateCertificate.swift
+✓ Sources/appstoreconnect-mcp/Tools/RevokeCertificate.swift
+✓ Sources/appstoreconnect-mcp/Tools/DownloadCertificate.swift
+
+Files Modified (3):
+-------------------
+✓ Sources/appstoreconnect-mcp/AppStoreConnectClient.swift
+  - Added 4 error types for certificate operations
+  - Added 5 methods to AppStoreConnectClientWrapper
+  - Changed client/logger from private to internal for extensions
+
+✓ Sources/appstoreconnect-mcp/MCPServer.swift
+  - Added 4 tool definitions with complete schemas
+  - Added 4 handler cases in handleToolCall()
+
+✓ Sources/appstoreconnect-mcp/AppStoreConnectClient+Profiles.swift
+  - Fixed Swift 6.0 compilation error (unrelated to certificates)
+
+Tools Implemented:
+------------------
+1. list_certificates
+   - Optional certificate_type filter
+   - Formatted table output with status
+
+2. create_certificate
+   - Required certificate_type and csr_content
+   - Returns certificate details
+
+3. revoke_certificate
+   - Required certificate_id
+   - Permanent revocation with confirmation
+
+4. download_certificate
+   - Required certificate_id and output_path
+   - Downloads .cer file with instructions
+
+Build Status:
+-------------
+✓ Build complete! (0.17s)
+✓ All tools compile without errors
+✓ Swift format applied
+✓ Follows existing project patterns
+
+Supported Certificate Types (18):
+---------------------------------
+IOS_DEVELOPMENT, IOS_DISTRIBUTION, MAC_APP_DEVELOPMENT,
+MAC_APP_DISTRIBUTION, MAC_INSTALLER_DISTRIBUTION,
+DEVELOPER_ID_APPLICATION, DEVELOPER_ID_APPLICATION_G2,
+DEVELOPER_ID_KEXT, DEVELOPER_ID_KEXT_G2, DEVELOPMENT,
+DISTRIBUTION, PASS_TYPE_ID, PASS_TYPE_ID_WITH_NFC,
+APPLE_PAY, APPLE_PAY_MERCHANT_IDENTITY,
+APPLE_PAY_PSP_IDENTITY, APPLE_PAY_RSA, IDENTITY_ACCESS
+
+Implementation Quality:
+-----------------------
+✓ Swift 6.0 compatible
+✓ Actor-isolated for thread safety
+✓ Sendable conformance
+✓ Comprehensive error handling
+✓ Structured logging
+✓ Type-safe API calls
+✓ Follows asc-swift library patterns

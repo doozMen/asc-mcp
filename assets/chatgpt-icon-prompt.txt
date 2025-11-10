@@ -1,0 +1,35 @@
+Create a professional app icon for an App Store Connect MCP (Model Context Protocol) server plugin.
+
+Icon Requirements:
+- Size: 1024x1024 pixels (for Retina display)
+- Format: PNG with transparency
+- Style: Modern, clean, developer-focused
+
+Design Elements:
+- Primary: App Store Connect blue gradient (#0071E3 to #005BBB)
+- Include: Swift programming language symbol or chevron pattern
+- Include: MCP/API connection symbol (interconnected nodes or data flow)
+- Optional: Small dSYM document icon or crash report symbolization element
+
+Visual Style:
+- Flat design with subtle depth
+- Professional for developer tools
+- Recognizable at small sizes (down to 128x128)
+- High contrast for visibility
+- Rounded square or circular badge format
+
+Context:
+This is an MCP server that provides iOS development automation through Claude Code:
+- App Store Connect API integration
+- Automated dSYM download and upload
+- Firebase Crashlytics integration
+- Build and app management
+- Supports both iOS and Android apps
+
+The icon should convey:
+- iOS/mobile development
+- Automation and developer productivity
+- Integration between services (App Store Connect + Firebase)
+- Professional, trustworthy tool
+
+Please create a modern, professional icon suitable for the Anthropic Claude Code marketplace.
