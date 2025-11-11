@@ -20,7 +20,7 @@ actor MCPServer {
 
     self.server = Server(
       name: "appstoreconnect-mcp",
-      version: "0.0.1-alpha.1",
+      version: "0.0.1-alpha.2",
       capabilities: .init(
         prompts: nil,
         resources: nil,

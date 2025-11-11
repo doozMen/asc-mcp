@@ -418,6 +418,58 @@ rm -f ~/.swiftpm/bin/asc
 xcrun swift package experimental-install --product asc
 ```
 
+## Agents & Skills
+
+### Included Agents
+
+#### App Store Connect Specialist (`@app-store-connect-specialist`)
+
+Expert agent for App Store Connect API operations with restricted tool access (only asc-mcp and Firebase MCP).
+
+**Capabilities**:
+- App and build management (list, status, builds, dSYMs)
+- Certificate and provisioning profile management
+- Firebase Crashlytics integration
+- Build validation and TestFlight uploads
+
+**Access**: Located in `agents/app-store-connect-specialist.md`
+
+**Invoke**:
+```
+@app-store-connect-specialist I need to download the latest dSYMs for my app
+@app-store-connect-specialist help with Firebase Crashlytics setup
+```
+
+#### iOS Crash Manager (`@ios-crash-manager`)
+
+Analyzes crash reports and manages dSYM symbolication workflows.
+
+**Access**: Located in `agents/ios-crash-manager.md`
+
+### Included Skills
+
+#### Swift CLI Notarization Skill
+
+Complete reference guide for building, signing, notarizing, and distributing Swift command-line tools.
+
+**Contents**:
+- SPM project initialization and building
+- Code signing with Developer ID certificates
+- Notarization workflow with Apple notarytool
+- Distribution methods (GitHub, Homebrew, SPM)
+- File access permissions and user data protection
+- Troubleshooting and best practices
+
+**Access**: Located in `skills/swift-cli-notarization.md`
+
+**Use When**:
+- Building CLI tools for distribution
+- Setting up code signing and notarization
+- Packaging tools for macOS distribution
+- Referencing signing certificate requirements
+
+**Example**: See "Extending Firebase Support" in CLAUDE.md for references to this skill
+
 ## Plugin Distribution
 
 **Part of PromptPing Marketplace**:

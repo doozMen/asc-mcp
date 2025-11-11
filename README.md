@@ -19,13 +19,19 @@ cd ~/.claude/plugins/appstoreconnect-mcp
 ./install.sh
 ```
 
-**Features:**
-- 4 slash commands for common workflows (`/download-latest-dsyms`, `/upload-dsyms-to-crashlytics`, etc.)
-- iOS crash manager agent for automated symbolication workflows
-- Interactive credential setup guide
-- Comprehensive documentation
+**Plugin Components:**
+- **Agents** (2):
+  - `@app-store-connect-specialist`: Expert in App Store Connect API operations, Firebase Crashlytics, and iOS app lifecycle management
+  - `@ios-crash-manager`: Analyzes crash reports and manages dSYM symbolication workflows
+- **Skills** (1):
+  - `swift-cli-notarization`: Complete guide for building, signing, notarizing, and distributing Swift CLI tools
+- **Slash Commands**: 4 common workflows (`/download-latest-dsyms`, `/upload-dsyms-to-crashlytics`, etc.)
+- **Interactive Setup**: Automated 1Password integration for credential retrieval
 
-**Learn more:** See [PLUGIN_README.md](PLUGIN_README.md) for full plugin documentation and [QUICK_START.md](QUICK_START.md) for 5-minute setup guide.
+**Learn more:** See [PLUGIN_README.md](PLUGIN_README.md) for full plugin documentation, [QUICK_START.md](QUICK_START.md) for 5-minute setup, or run:
+```
+@app-store-connect-specialist help
+```
 
 ## Features
 
