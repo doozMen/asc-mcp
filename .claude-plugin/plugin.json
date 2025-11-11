@@ -24,6 +24,11 @@
     "notarization"
   ],
   "mcpServers": "./.mcp.json",
-  "agents": "./agents/",
-  "skills": "./skills/"
+  "agents": [
+    "./agents/app-store-connect-specialist.md",
+    "./agents/ios-crash-manager.md"
+  ],
+  "skills": [
+    "./skills/swift-cli-notarization.md"
+  ]
 }
