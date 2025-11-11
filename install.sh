@@ -78,12 +78,42 @@ if [ ! -t 0 ]; then
     exit 0
 fi
 
-# Interactive mode - offer credential configuration
+# Interactive mode - check if credentials already configured
+echo ""
+SETTINGS_FILE="$HOME/.claude/settings.json"
+
+# Check if credentials already exist in settings
+CREDS_CONFIGURED=false
+if [ -f "$SETTINGS_FILE" ]; then
+    if grep -q "ASC_KEY_ID" "$SETTINGS_FILE" && \
+       grep -q "ASC_ISSUER_ID" "$SETTINGS_FILE" && \
+       grep -q "ASC_PRIVATE_KEY_PATH" "$SETTINGS_FILE"; then
+        CREDS_CONFIGURED=true
+    fi
+fi
+
+if [ "$CREDS_CONFIGURED" = true ]; then
+    echo "✓ App Store Connect credentials already configured in ~/.claude/settings.json"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ Installation Complete!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Your asc-mcp MCP server is ready to use."
+    echo ""
+    echo "Restart Claude Code to load the plugin."
+    echo ""
+    exit 0
+fi
+
+# Credentials not configured - offer setup
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📋 Credential Configuration Required"
+echo "📋 Credential Configuration (Optional)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "The plugin is installed, but needs App Store Connect credentials."
+echo "The plugin is installed. Configure App Store Connect credentials now?"
+echo ""
+echo "You can also add them later to ~/.claude/settings.json"
 echo ""
 echo "Configure credentials using 1Password? (y/n)"
 read -r use_1password
@@ -176,13 +206,19 @@ if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY_PAT
     echo ""
     echo "Then restart Claude Code to load the credentials."
     echo ""
+    exit 0
 else
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Manual Configuration Required"
+    echo "✅ Installation Complete (Credentials Optional)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Add your App Store Connect credentials to ~/.claude/settings.json:"
+    echo "Your asc-mcp MCP server is installed!"
+    echo ""
+    echo "To add App Store Connect credentials later:"
+    echo ""
+    echo "1. Edit ~/.claude/settings.json"
+    echo "2. Add to the 'env' section:"
     echo ""
     echo '"env": {'
     echo '  "ASC_KEY_ID": "YOUR_KEY_ID",'
@@ -190,5 +226,7 @@ else
     echo '  "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
     echo '}'
     echo ""
-    echo "Then restart Claude Code."
+    echo "3. Restart Claude Code"
+    echo ""
+    exit 0
 fi
