@@ -74,6 +74,15 @@ if [ ! -t 0 ]; then
     echo '  "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
     echo '}'
     echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Plugin Installation via Claude Code"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Install the plugin via PromptPing Marketplace:"
+    echo ""
+    echo "  /plugin marketplace add github:doozMen/promptping-marketplace"
+    echo "  /plugin install asc-mcp"
+    echo ""
     echo "Then restart Claude Code."
     exit 0
 fi
@@ -99,9 +108,23 @@ if [ "$CREDS_CONFIGURED" = true ]; then
     echo "✅ Installation Complete!"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Your asc-mcp MCP server is ready to use."
+    echo "Your asc-mcp MCP server binary is installed."
     echo ""
-    echo "Restart Claude Code to load the plugin."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Plugin Installation via Claude Code"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Install the plugin via PromptPing Marketplace:"
+    echo ""
+    echo "  /plugin marketplace add github:doozMen/promptping-marketplace"
+    echo "  /plugin install asc-mcp"
+    echo ""
+    echo "Or for local development:"
+    echo ""
+    echo "  /plugin marketplace add /Users/\$USER/Developer/promptping-marketplace"
+    echo "  /plugin install asc-mcp"
+    echo ""
+    echo "Then restart Claude Code to load the plugin."
     echo ""
     exit 0
 fi
@@ -204,6 +227,15 @@ if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY_PAT
     echo '  "ASC_PRIVATE_KEY_PATH": "'$ASC_PRIVATE_KEY_PATH'"'
     echo '}'
     echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Plugin Installation via Claude Code"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Install the plugin via PromptPing Marketplace:"
+    echo ""
+    echo "  /plugin marketplace add github:doozMen/promptping-marketplace"
+    echo "  /plugin install asc-mcp"
+    echo ""
     echo "Then restart Claude Code to load the credentials."
     echo ""
     exit 0
@@ -213,7 +245,7 @@ else
     echo "✅ Installation Complete (Credentials Optional)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Your asc-mcp MCP server is installed!"
+    echo "Your asc-mcp MCP server binary is installed!"
     echo ""
     echo "To add App Store Connect credentials later:"
     echo ""
@@ -227,6 +259,17 @@ else
     echo '}'
     echo ""
     echo "3. Restart Claude Code"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Plugin Installation via Claude Code"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Install the plugin via PromptPing Marketplace:"
+    echo ""
+    echo "  /plugin marketplace add github:doozMen/promptping-marketplace"
+    echo "  /plugin install asc-mcp"
+    echo ""
+    echo "Then restart Claude Code."
     echo ""
     exit 0
 fi

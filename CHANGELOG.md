@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1-alpha.4] - 2025-11-11
+
+### Changed
+
+#### Installation Script
+- **Plugin Installation Instructions**: Added comprehensive plugin installation guide to `install.sh`
+  - Includes PromptPing Marketplace installation commands
+  - Shows both GitHub and local development installation paths
+  - Visible in all exit paths (credentials configured, 1Password setup, manual setup, or declined)
+  - Consistent with marketplace distribution model
+
+### Documentation
+- Enhanced installation workflow to guide users through both binary and plugin setup
+- Clarifies the two-step process: binary installation → plugin installation via marketplace
+
+## [0.0.1-alpha.3] - 2025-11-11
+
+### Fixed
+
+#### Plugin Validation
+- **Agent/Skill Paths**: Fixed plugin.json to use array of individual `.md` file paths
+  - Claude Code validator requires explicit `.md` endings
+  - Changed from directory paths to individual file paths for validation compliance
+  - Agents: `["./agents/app-store-connect-specialist.md", "./agents/ios-crash-manager.md"]`
+  - Skills: `["./skills/swift-cli-notarization.md"]`
+
+### Changed
+- Version bumped to `0.0.1-alpha.3` in all version references
+- Successfully validated plugin structure with Claude Code validator
+
 ## [0.0.1-alpha.2] - 2025-11-11
 
 ### Added
