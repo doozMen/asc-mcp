@@ -21,7 +21,7 @@ struct AppStoreConnectCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "appstoreconnect-mcp",
     abstract: "MCP server for App Store Connect API integration",
-    version: "0.0.1-alpha.0"
+    version: "0.0.1-alpha.1"
   )
 
   @Option(name: .long, help: "Log level: 'debug', 'info', 'warn', or 'error'")

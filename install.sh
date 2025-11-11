@@ -68,14 +68,11 @@ if [ ! -t 0 ]; then
     echo ""
     echo "Add App Store Connect credentials to ~/.claude/settings.json:"
     echo ""
-    echo '{
-  "env": {
-    "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",
-    "ASC_KEY_ID": "YOUR_KEY_ID",
-    "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
-    "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"
-  }
-}'
+    echo '"env": {'
+    echo '  "ASC_KEY_ID": "YOUR_KEY_ID",'
+    echo '  "ASC_ISSUER_ID": "YOUR_ISSUER_ID",'
+    echo '  "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
+    echo '}'
     echo ""
     echo "Then restart Claude Code."
     exit 0
@@ -99,46 +96,54 @@ if [[ "$use_1password" =~ ^[Yy]$ ]]; then
             fi
 
             echo ""
-            echo "Enter your 1Password item name containing App Store Connect credentials:"
-            echo "The item should have these fields:"
-            echo "  - ASC Key ID"
-            echo "  - ASC Issuer ID"
-            echo "  - ASC Private Key Path"
-            echo ""
-            echo "Example: 'Dooz Apple developer' or 'App Store Connect API'"
+            echo "Retrieving App Store Connect credentials from 1Password..."
             echo ""
 
-            echo -n "1Password item name: "
-            read -r OP_ITEM_NAME
-
-            # Retrieve all credentials from the single item
-            echo ""
-            echo "Retrieving credentials from 1Password item '$OP_ITEM_NAME'..."
+            # Retrieve credentials from the Dooz Apple developer item
+            OP_ITEM_NAME="Dooz Apple developer"
 
             ASC_KEY_ID=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Key ID" 2>/dev/null)
             ASC_ISSUER_ID=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Issuer ID" 2>/dev/null)
-            ASC_PRIVATE_KEY_PATH=$(op item get "$OP_ITEM_NAME" --fields "label=ASC Private Key Path" 2>/dev/null)
+
+            # Extract the private key file from 1Password
+            mkdir -p ~/.appstoreconnect
+
+            # Get the file name from the item
+            PRIVATE_KEY_FILE=$(op item get "$OP_ITEM_NAME" --format json 2>/dev/null | jq -r '.files[0].name' 2>/dev/null)
+
+            if [ -z "$PRIVATE_KEY_FILE" ]; then
+                echo "Error: No private key file found in 1Password item '$OP_ITEM_NAME'"
+                exit 1
+            fi
+
+            # Download the private key file
+            op item get "$OP_ITEM_NAME" "$PRIVATE_KEY_FILE" > ~/.appstoreconnect/"$PRIVATE_KEY_FILE" 2>/dev/null
+
+            ASC_PRIVATE_KEY_PATH="$HOME/.appstoreconnect/$PRIVATE_KEY_FILE"
+
+            # Set proper permissions on the private key
+            chmod 600 "$ASC_PRIVATE_KEY_PATH"
 
             # Validate all fields were retrieved
             if [ -z "$ASC_KEY_ID" ]; then
                 echo "Error: Field 'ASC Key ID' not found in 1Password item '$OP_ITEM_NAME'"
-                echo "Make sure the item has a field labeled exactly 'ASC Key ID'"
                 exit 1
             fi
 
             if [ -z "$ASC_ISSUER_ID" ]; then
                 echo "Error: Field 'ASC Issuer ID' not found in 1Password item '$OP_ITEM_NAME'"
-                echo "Make sure the item has a field labeled exactly 'ASC Issuer ID'"
                 exit 1
             fi
 
-            if [ -z "$ASC_PRIVATE_KEY_PATH" ]; then
-                echo "Error: Field 'ASC Private Key Path' not found in 1Password item '$OP_ITEM_NAME'"
-                echo "Make sure the item has a field labeled exactly 'ASC Private Key Path'"
+            if [ ! -f "$ASC_PRIVATE_KEY_PATH" ]; then
+                echo "Error: Private key file not found at $ASC_PRIVATE_KEY_PATH"
                 exit 1
             fi
 
     echo "✓ Retrieved 3 credentials from 1Password item '$OP_ITEM_NAME'"
+    echo "  - ASC Key ID: ${ASC_KEY_ID:0:8}..."
+    echo "  - ASC Issuer ID: ${ASC_ISSUER_ID:0:8}..."
+    echo "  - Private Key: $PRIVATE_KEY_FILE"
 
 else
     # Manual credential entry
@@ -154,43 +159,22 @@ fi
 
 # Check if credentials were provided
 if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_PRIVATE_KEY_PATH" ]; then
-    # Update .mcp.json in plugin directory with credentials
     echo ""
-    echo "Updating plugin configuration with credentials..."
-
-    # Create updated .mcp.json
-    cat > "$PLUGIN_DIR/.mcp.json" <<EOF_MCP
-{
-  "mcpServers": {
-    "asc": {
-      "command": "asc",
-      "env": {
-        "PATH": "\$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",
-        "ASC_KEY_ID": "$ASC_KEY_ID",
-        "ASC_ISSUER_ID": "$ASC_ISSUER_ID",
-        "ASC_PRIVATE_KEY_PATH": "$ASC_PRIVATE_KEY_PATH"
-      }
-    }
-  }
-}
-EOF_MCP
-
-    echo "✓ Plugin configured with App Store Connect credentials"
+    echo "✓ Credentials retrieved from 1Password"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "✅ Installation Complete!"
+    echo "✅ Add Credentials to Claude Settings"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Plugin Location: $PLUGIN_DIR"
-    echo "MCP Binary: ~/.swiftpm/bin/asc"
-    echo "Configuration: $PLUGIN_DIR/.mcp.json"
+    echo "Add these credentials to ~/.claude/settings.json:"
     echo ""
-    echo "🔄 Restart Claude Code to load the plugin"
+    echo '"env": {'
+    echo '  "ASC_KEY_ID": "'$ASC_KEY_ID'",'
+    echo '  "ASC_ISSUER_ID": "'$ASC_ISSUER_ID'",'
+    echo '  "ASC_PRIVATE_KEY_PATH": "'$ASC_PRIVATE_KEY_PATH'"'
+    echo '}'
     echo ""
-    echo "Test with:"
-    echo "  'List all my apps from App Store Connect'"
-    echo "  'Show me the latest build for my app'"
-    echo "  'Register bundle ID com.example.myapp'"
+    echo "Then restart Claude Code to load the credentials."
     echo ""
 else
     echo ""
@@ -198,21 +182,13 @@ else
     echo "Manual Configuration Required"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Edit $PLUGIN_DIR/.mcp.json and add your credentials:"
+    echo "Add your App Store Connect credentials to ~/.claude/settings.json:"
     echo ""
-    echo '{
-  "mcpServers": {
-    "asc": {
-      "command": "asc",
-      "env": {
-        "PATH": "$HOME/.swiftpm/bin:/usr/local/bin:/usr/bin:/bin",
-        "ASC_KEY_ID": "YOUR_KEY_ID",
-        "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
-        "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"
-      }
-    }
-  }
-}'
+    echo '"env": {'
+    echo '  "ASC_KEY_ID": "YOUR_KEY_ID",'
+    echo '  "ASC_ISSUER_ID": "YOUR_ISSUER_ID",'
+    echo '  "ASC_PRIVATE_KEY_PATH": "/path/to/AuthKey_XXXXXXXXXX.p8"'
+    echo '}'
     echo ""
     echo "Then restart Claude Code."
 fi

@@ -21,12 +21,14 @@ xcrun swift build -c release
 
 # Manual install (remove old binary first)
 rm -f ~/.swiftpm/bin/asc
-xcrun swift package experimental-install --product appstoreconnect-mcp
+xcrun swift package experimental-install --product asc
 
 # Verify installation
 which asc
 asc --version
 ```
+
+**Important**: The executable product is named `asc` (not `appstoreconnect-mcp`) in Package.swift for a shorter, simpler binary name.
 
 ### Testing
 
@@ -60,8 +62,8 @@ export ASC_ISSUER_ID="YOUR_ISSUER_ID"
 export ASC_PRIVATE_KEY_PATH="/path/to/AuthKey_XXX.p8"
 
 # Run with different log levels
-xcrun swift run appstoreconnect-mcp --log-level debug
-xcrun swift run appstoreconnect-mcp --log-level info  # Default
+xcrun swift run asc --log-level debug
+xcrun swift run asc --log-level info  # Default
 ```
 
 ## Architecture
@@ -275,14 +277,23 @@ Pure Swift implementation (no Ruby, no Fastlane):
 
 ### 1Password Integration
 
-The `install.sh` script supports automated credential retrieval:
+The `install.sh` script automatically retrieves credentials from the "Dooz Apple developer" 1Password item:
 
 ```bash
 # Interactive installation with 1Password
 ./install.sh
 # Choose "y" for 1Password integration
-# Enter item name containing fields: "ASC Key ID", "ASC Issuer ID", "ASC Private Key Path"
+# Script automatically finds and extracts:
+#   - ASC Key ID field
+#   - ASC Issuer ID field
+#   - AuthKey_*.p8 private key file
 ```
+
+**How it works**:
+1. Retrieves "ASC Key ID" and "ASC Issuer ID" fields from 1Password
+2. Downloads the `.p8` private key file to `~/.appstoreconnect/`
+3. Sets proper file permissions (600) on the key
+4. Outputs credentials for manual entry into `~/.claude/settings.json`
 
 ## Testing Strategy
 
@@ -345,7 +356,7 @@ export ASC_ISSUER_ID="..."
 export ASC_PRIVATE_KEY_PATH="..."
 
 # Run with debug logging
-xcrun swift run appstoreconnect-mcp --log-level debug < test_request.json
+xcrun swift run asc --log-level debug < test_request.json
 ```
 
 ### Working with App Store Connect API
@@ -404,7 +415,7 @@ echo $PATH | grep '.swiftpm/bin'
 
 # Reinstall
 rm -f ~/.swiftpm/bin/asc
-xcrun swift package experimental-install --product appstoreconnect-mcp
+xcrun swift package experimental-install --product asc
 ```
 
 ## Plugin Distribution
