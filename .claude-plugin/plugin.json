@@ -1,6 +1,6 @@
 {
   "name": "asc-mcp",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "App Store Connect integration with Firebase Crashlytics support for iOS developers",
   "author": {
     "name": "Stijn Willems",
