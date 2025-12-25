@@ -1,7 +1,7 @@
 # App Store Connect MCP Server
 
-[![Version](https://img.shields.io/github/v/release/doozMen/asc-mcp)](https://github.com/doozMen/asc-mcp/releases)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/doozMen/asc-mcp)
+[![CI Status](https://github.com/promptping-ai/asc-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/promptping-ai/asc-mcp/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/release/promptping-ai/asc-mcp)](https://github.com/promptping-ai/asc-mcp/releases)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
