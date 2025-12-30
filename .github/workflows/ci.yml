@@ -1,10 +1,14 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   ci:
@@ -13,8 +17,11 @@ jobs:
 
   rules:
     uses: promptping-ai/.github/.github/workflows/swift-rules-check.yml@main
+    secrets: inherit
+
+  workflow-lint:
+    uses: promptping-ai/.github/.github/workflows/workflow-lint.yml@main
 
   review:
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     uses: promptping-ai/.github/.github/workflows/swift-review.yml@main
     secrets: inherit
